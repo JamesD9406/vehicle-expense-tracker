@@ -6,16 +6,19 @@ using System.Text;
 using VehicleExpenseAPI.Data;
 using VehicleExpenseAPI.Models;
 using Serilog;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using VehicleExpenseAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog for logging
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .WriteTo.Console()
-    .CreateLogger();
+// Log.Logger = new LoggerConfiguration()
+//     .ReadFrom.Configuration(builder.Configuration)
+//     .WriteTo.Console()
+//     .CreateLogger();
 
-builder.Host.UseSerilog();
+// builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -39,6 +42,13 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
+
+// Register FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+// Register services
+builder.Services.AddScoped<AuthService>();
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -87,7 +97,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseSerilogRequestLogging();
+// app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
