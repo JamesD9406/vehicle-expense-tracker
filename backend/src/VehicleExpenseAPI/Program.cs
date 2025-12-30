@@ -52,6 +52,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 // Register services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<VehicleService>();
+builder.Services.AddScoped<ExpenseService>();
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
