@@ -10,6 +10,9 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using VehicleExpenseAPI.Services;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Http.Features;
+using VehicleExpenseAPI.Filters;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,6 +58,19 @@ builder.Services.AddScoped<VehicleService>();
 builder.Services.AddScoped<ExpenseService>();
 builder.Services.AddScoped<FuelService>();
 builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<ReceiptOcrService>();
+builder.Services.AddScoped<DocumentService>();
+
+// Add file upload limits
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB global limit
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB
+});
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -109,7 +125,6 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-
 
 // Configure CORS (for frontend development)
 builder.Services.AddCors(options =>
