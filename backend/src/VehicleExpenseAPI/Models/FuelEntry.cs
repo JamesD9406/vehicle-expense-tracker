@@ -6,8 +6,11 @@ public class FuelEntry
 {
     public int Id { get; set; }
     
+    public EnergyType EnergyType { get; set; }
+    
+    // Amount of energy added (liters for fuel, kWh for electricity)
     [Range(0.01, double.MaxValue)]
-    public decimal Liters { get; set; }
+    public decimal Amount { get; set; }
     
     [Range(0.01, double.MaxValue)]
     public decimal Cost { get; set; }
@@ -16,7 +19,7 @@ public class FuelEntry
     public int Odometer { get; set; }
     
     [Required]
-    public DateTime Date { get; set; }
+    public DateOnly Date { get; set; }
     
     // Foreign key to Vehicle
     [Required]

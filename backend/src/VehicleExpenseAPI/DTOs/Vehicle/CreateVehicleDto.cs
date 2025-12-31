@@ -1,3 +1,5 @@
+using VehicleExpenseAPI.Models;
+
 namespace VehicleExpenseAPI.DTOs.Vehicle;
 
 public class CreateVehicleDto
@@ -8,4 +10,5 @@ public class CreateVehicleDto
     public decimal PurchasePrice { get; set; }
     public DateOnly OwnershipStart { get; set; }
     public DateOnly? OwnershipEnd { get; set; }
+    public VehicleType VehicleType { get; set; } = VehicleType.Gasoline;
 }
