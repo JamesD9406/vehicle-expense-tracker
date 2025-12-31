@@ -54,6 +54,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<VehicleService>();
 builder.Services.AddScoped<ExpenseService>();
 builder.Services.AddScoped<FuelService>();
+builder.Services.AddScoped<ReportService>();
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
