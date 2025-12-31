@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VehicleExpenseAPI.Data;
@@ -11,9 +12,11 @@ using VehicleExpenseAPI.Data;
 namespace VehicleExpenseAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251231155002_FuelDtateToDateOnly")]
+    partial class FuelDtateToDateOnly
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -194,10 +197,6 @@ namespace VehicleExpenseAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("numeric(18,3)");
-
                     b.Property<decimal>("Cost")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -205,8 +204,9 @@ namespace VehicleExpenseAPI.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
-                    b.Property<int>("EnergyType")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Liters")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("numeric(18,3)");
 
                     b.Property<int>("Odometer")
                         .HasColumnType("integer");
@@ -357,9 +357,6 @@ namespace VehicleExpenseAPI.Migrations
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int>("VehicleType")
-                        .HasColumnType("integer");
 
                     b.Property<int>("Year")
                         .HasColumnType("integer");

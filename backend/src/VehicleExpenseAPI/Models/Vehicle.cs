@@ -23,6 +23,8 @@ public class Vehicle
     
     public DateOnly? OwnershipEnd { get; set; }
     
+    public VehicleType VehicleType { get; set; } = VehicleType.Gasoline;
+    
     // Foreign key to User
     [Required]
     public string UserId { get; set; } = string.Empty;

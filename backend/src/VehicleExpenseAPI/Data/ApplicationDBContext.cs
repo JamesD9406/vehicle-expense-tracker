@@ -34,7 +34,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .HasPrecision(18, 2);
 
     modelBuilder.Entity<FuelEntry>()
-            .Property(f => f.Liters)
+            .Property(f => f.Amount)
             .HasPrecision(18, 3);
 
     modelBuilder.Entity<Receipt>()

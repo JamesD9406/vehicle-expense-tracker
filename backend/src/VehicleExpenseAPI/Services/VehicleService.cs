@@ -14,6 +14,19 @@ public class VehicleService
         _context = context;
     }
 
+    private static string GetVehicleTypeDisplay(VehicleType vehicleType)
+{
+        return vehicleType switch
+        {
+            VehicleType.Gasoline => "Gasoline",
+            VehicleType.Diesel => "Diesel",
+            VehicleType.Electric => "Electric",
+            VehicleType.Hybrid => "Hybrid",
+            VehicleType.PlugInHybrid => "Plug-in Hybrid",
+            _ => "Unknown"
+        };
+    }
+
     public async Task<IEnumerable<VehicleDto>> GetAllAsync(string userId)
     {
         var vehicles = await _context.Vehicles
@@ -29,7 +42,9 @@ public class VehicleService
             PurchasePrice = v.PurchasePrice,
             OwnershipStart = v.OwnershipStart,
             OwnershipEnd = v.OwnershipEnd,
-            UserId = v.UserId
+            UserId = v.UserId,
+            VehicleType = v.VehicleType,
+            VehicleTypeDisplay = GetVehicleTypeDisplay(v.VehicleType)
         });
     }
 
@@ -53,7 +68,9 @@ public class VehicleService
             PurchasePrice = vehicle.PurchasePrice,
             OwnershipStart = vehicle.OwnershipStart,
             OwnershipEnd = vehicle.OwnershipEnd,
-            UserId = vehicle.UserId
+            UserId = vehicle.UserId,
+            VehicleType = vehicle.VehicleType,
+            VehicleTypeDisplay = GetVehicleTypeDisplay(vehicle.VehicleType)
         };
     }
 
@@ -67,7 +84,8 @@ public class VehicleService
             PurchasePrice = createDto.PurchasePrice,
             OwnershipStart = createDto.OwnershipStart,
             OwnershipEnd = createDto.OwnershipEnd,
-            UserId = userId
+            UserId = userId,
+            VehicleType = createDto.VehicleType
         };
 
         _context.Vehicles.Add(vehicle);
@@ -82,7 +100,9 @@ public class VehicleService
             PurchasePrice = vehicle.PurchasePrice,
             OwnershipStart = vehicle.OwnershipStart,
             OwnershipEnd = vehicle.OwnershipEnd,
-            UserId = vehicle.UserId
+            UserId = vehicle.UserId,
+            VehicleType = vehicle.VehicleType,
+            VehicleTypeDisplay = GetVehicleTypeDisplay(vehicle.VehicleType)
         };
     }
 
@@ -103,6 +123,7 @@ public class VehicleService
         vehicle.PurchasePrice = updateDto.PurchasePrice;
         vehicle.OwnershipStart = updateDto.OwnershipStart;
         vehicle.OwnershipEnd = updateDto.OwnershipEnd;
+        vehicle.VehicleType = updateDto.VehicleType;
 
         await _context.SaveChangesAsync();
 
@@ -115,7 +136,9 @@ public class VehicleService
             PurchasePrice = vehicle.PurchasePrice,
             OwnershipStart = vehicle.OwnershipStart,
             OwnershipEnd = vehicle.OwnershipEnd,
-            UserId = vehicle.UserId
+            UserId = vehicle.UserId,
+            VehicleType = vehicle.VehicleType,
+            VehicleTypeDisplay = GetVehicleTypeDisplay(vehicle.VehicleType)
         });
     }
 
