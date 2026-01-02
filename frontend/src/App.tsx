@@ -1,14 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-
-// Placeholder components for now
-const LoginPage = () => <div className="p-8">Login Page - To be implemented</div>;
-const RegisterPage = () => <div className="p-8">Register Page - To be implemented</div>;
-const DashboardPage = () => <div className="p-8">Dashboard - Protected Route</div>;
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { DashboardPage } from './pages/DashboardPage';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-900">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
