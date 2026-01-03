@@ -4,6 +4,7 @@ import { Car, DollarSign, Fuel, Wallet, TrendingUp, Plus, Loader2, AlertCircle }
 import { Navigation } from '../components/Navigation';
 import { reportService } from '../services/reportService';
 import { vehicleService } from '../services/vehicleService';
+import { formatCurrency, formatDateOnly } from '../utils/helpers';
 import type { VehicleSummaryDto } from '../types/Report';
 import type { Vehicle } from '../types/Vehicle';
 
@@ -36,13 +37,6 @@ export function DashboardPage() {
 
     fetchData();
   }, []);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   if (isLoading) {
     return (
@@ -317,7 +311,7 @@ export function DashboardPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-300">
-                              {new Date(vehicle.ownershipStart).toLocaleDateString()}
+                              {formatDateOnly(vehicle.ownershipStart)}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
