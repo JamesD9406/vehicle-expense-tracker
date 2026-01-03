@@ -5,6 +5,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { VehiclesPage } from './pages/VehiclesPage';
 import { VehicleDetailsPage } from './pages/VehicleDetailsPage';
+import { ExpensesPage } from './pages/ExpensesPage';
 
 function App() {
   return (
@@ -36,20 +37,15 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Placeholder routes for future pages */}
         <Route
           path="/expenses"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-center">
-                  <h1 className="text-3xl font-bold text-white">Expenses Page</h1>
-                  <p className="text-gray-400 mt-2">Coming soon...</p>
-                </div>
-              </div>
+              <ExpensesPage />
             </ProtectedRoute>
           }
         />
+        {/* Placeholder routes for future pages */}
         <Route
           path="/fuel"
           element={

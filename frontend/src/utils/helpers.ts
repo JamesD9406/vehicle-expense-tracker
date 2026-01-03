@@ -21,3 +21,15 @@ export const formatCurrency = (amount: number): string => {
     currency: 'CAD',
   }).format(amount);
 };
+
+/**
+ * Converts a DateOnly string from backend to YYYY-MM-DD format for HTML date inputs.
+ * Handles both "YYYY-MM-DD" and "YYYY-MM-DDTHH:mm:ss" formats.
+ */
+export const toDateInputValue = (dateString?: string): string => {
+  if (!dateString) {
+    return new Date().toISOString().split('T')[0];
+  }
+  return dateString.split('T')[0];
+};
+
