@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import type { Vehicle, CreateVehicleDto, UpdateVehicleDto } from '../../types/Vehicle'
 import type { AxiosError } from 'axios';
+import { toDateInputValue } from '../../utils/helpers';
 
 interface VehicleFormProps {
   vehicle?: Vehicle;
@@ -20,8 +21,8 @@ export function VehicleForm({ vehicle, onSubmit, onCancel }: VehicleFormProps) {
     model: vehicle?.model || '',
     year: vehicle?.year.toString() || new Date().getFullYear().toString(),
     purchasePrice: vehicle?.purchasePrice.toString() || '',
-    ownershipStart: vehicle?.ownershipStart.split('T')[0] || '',
-    ownershipEnd: vehicle?.ownershipEnd?.split('T')[0] || '',
+    ownershipStart: vehicle?.ownershipStart ? toDateInputValue(vehicle.ownershipStart) : '',
+    ownershipEnd: vehicle?.ownershipEnd ? toDateInputValue(vehicle.ownershipEnd) : '',
     vehicleType: vehicle?.vehicleType.toString() || '0',
   });
 
