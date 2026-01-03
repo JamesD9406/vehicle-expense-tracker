@@ -3,6 +3,8 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { VehiclesPage } from './pages/VehiclesPage';
+import { VehicleDetailsPage } from './pages/VehicleDetailsPage';
 
 function App() {
   return (
@@ -18,20 +20,23 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Placeholder routes for future pages */}
         <Route
           path="/vehicles"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-center">
-                  <h1 className="text-3xl font-bold text-white">Vehicles Page</h1>
-                  <p className="text-gray-400 mt-2">Coming soon...</p>
-                </div>
-              </div>
+              <VehiclesPage />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/vehicles/:id"
+          element={
+            <ProtectedRoute>
+              <VehicleDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Placeholder routes for future pages */}
         <Route
           path="/expenses"
           element={
