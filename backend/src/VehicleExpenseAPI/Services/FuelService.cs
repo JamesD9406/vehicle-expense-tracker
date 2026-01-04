@@ -72,7 +72,7 @@ public class FuelService
 
         var fuelExpense = new Expense
         {
-            Category = ExpenseCategory.Fuel,
+            Category = ExpenseCategory.Other,
             Amount = createDto.Cost,
             Date = createDto.Date,
             Notes = fuelNote,
@@ -114,43 +114,41 @@ public class FuelService
             return (false, null);
         }
 
-        // If VehicleId is changing, verify the new vehicle belongs to the user
-        if (fuelEntry.VehicleId != updateDto.VehicleId)
-        {
-            var newVehicle = await _context.Vehicles
-                .Where(v => v.Id == updateDto.VehicleId && v.UserId == userId)
-                .FirstOrDefaultAsync();
-
-            if (newVehicle == null)
-            {
-                return (false, null);
-            }
-            
-            fuelEntry.VehicleId = updateDto.VehicleId;
-            fuelEntry.Vehicle = newVehicle;
-            
-            // Also update the linked expense's vehicle
-            if (fuelEntry.Expense != null)
-            {
-                fuelEntry.Expense.VehicleId = updateDto.VehicleId;
-            }
-        }
-
-        // Update FuelEntry fields
-        fuelEntry.EnergyType = updateDto.EnergyType;
-        fuelEntry.Amount = updateDto.Amount;
-        fuelEntry.Cost = updateDto.Cost;
-        fuelEntry.Odometer = updateDto.Odometer;
-        fuelEntry.Date = updateDto.Date;
+        // Update FuelEntry fields (only if provided)
+        if (updateDto.EnergyType.HasValue)
+            fuelEntry.EnergyType = updateDto.EnergyType.Value;
+        
+        if (updateDto.Amount.HasValue)
+            fuelEntry.Amount = updateDto.Amount.Value;
+        
+        if (updateDto.Cost.HasValue)
+            fuelEntry.Cost = updateDto.Cost.Value;
+        
+        if (updateDto.Odometer.HasValue)
+            fuelEntry.Odometer = updateDto.Odometer.Value;
+        
+        if (updateDto.Date.HasValue)
+            fuelEntry.Date = updateDto.Date.Value;
 
         // Update the linked Expense to match
         if (fuelEntry.Expense != null)
         {
-            fuelEntry.Expense.Amount = updateDto.Cost;
-            fuelEntry.Expense.Date = updateDto.Date;
-            fuelEntry.Expense.Notes = updateDto.EnergyType == EnergyType.Electricity
-                ? $"Charging session: {updateDto.Amount} kWh"
-                : $"{(updateDto.EnergyType == EnergyType.Diesel ? "Diesel" : "Gasoline")} fill-up: {updateDto.Amount}L";
+            if (updateDto.Cost.HasValue)
+                fuelEntry.Expense.Amount = updateDto.Cost.Value;
+            
+            if (updateDto.Date.HasValue)
+                fuelEntry.Expense.Date = updateDto.Date.Value;
+            
+            // Update notes if energy type or amount changed
+            if (updateDto.EnergyType.HasValue || updateDto.Amount.HasValue)
+            {
+                var energyType = updateDto.EnergyType ?? fuelEntry.EnergyType;
+                var amount = updateDto.Amount ?? fuelEntry.Amount;
+                
+                fuelEntry.Expense.Notes = energyType == EnergyType.Electricity
+                    ? $"Charging session: {amount} kWh"
+                    : $"{(energyType == EnergyType.Diesel ? "Diesel" : "Gasoline")} fill-up: {amount}L";
+            }
         }
 
         await _context.SaveChangesAsync();
@@ -188,6 +186,7 @@ public class FuelService
     /// </summary>
     public async Task<FuelEfficiencyDto?> GetEfficiencyAsync(int vehicleId, string userId)
     {
+        // Verify vehicle ownership
         var vehicle = await _context.Vehicles
             .Where(v => v.Id == vehicleId && v.UserId == userId)
             .FirstOrDefaultAsync();
@@ -197,98 +196,83 @@ public class FuelService
             return null;
         }
 
+        // Get all fuel entries for the vehicle
         var allEntries = await _context.FuelEntries
             .Where(f => f.VehicleId == vehicleId)
-            .OrderBy(f => f.Odometer)
             .ToListAsync();
 
-        if (allEntries.Count < 2)
-        {
-            // Need at least 2 entries to calculate efficiency
-            var fuelEntries = allEntries.Where(e => e.EnergyType != EnergyType.Electricity).ToList();
-            var electricEntries = allEntries.Where(e => e.EnergyType == EnergyType.Electricity).ToList();
+        // Calculate total costs (all entries)
+        var totalCost = allEntries.Sum(f => f.Cost);
+        var totalAmount = allEntries.Sum(f => f.Amount);
 
+        // Only use entries with valid odometer readings for efficiency calculations
+        var entriesWithOdometer = allEntries
+            .Where(e => e.Odometer.HasValue && e.Odometer.Value > 0)
+            .OrderBy(e => e.Odometer)
+            .ToList();
+
+        // If we don't have enough odometer data, return costs only
+        if (entriesWithOdometer.Count < 2)
+        {
             return new FuelEfficiencyDto
             {
                 VehicleId = vehicleId,
-                VehicleMake = vehicle.Make,
-                VehicleModel = vehicle.Model,
-                VehicleType = vehicle.VehicleType,
-                TotalFuelCost = fuelEntries.Sum(f => f.Cost),
-                TotalFuelLiters = fuelEntries.Sum(f => f.Amount),
-                TotalElectricityCost = electricEntries.Sum(f => f.Cost),
-                TotalElectricityKwh = electricEntries.Sum(f => f.Amount),
-                TotalEnergyCost = allEntries.Sum(f => f.Cost),
+                TotalCost = totalCost,
+                TotalAmount = totalAmount,
                 TotalKilometers = 0,
-                NumberOfFuelEntries = fuelEntries.Count,
-                NumberOfChargeEntries = electricEntries.Count,
-                FirstEntryDate = allEntries.FirstOrDefault()?.Date,
-                LastEntryDate = allEntries.LastOrDefault()?.Date
+                AverageLitersPer100Km = null,
+                AverageKilometersPerLiter = null,
+                AverageCostPerKilometer = null,
+                AverageCostPerFillUp = allEntries.Count > 0 ? totalCost / allEntries.Count : 0,
+                TotalFillUps = allEntries.Count,
+                EntriesWithOdometer = entriesWithOdometer.Count,
+                EntriesWithoutOdometer = allEntries.Count - entriesWithOdometer.Count
             };
         }
 
-        // Separate fuel and electricity entries
-        var fuelOnlyEntries = allEntries.Where(e => e.EnergyType != EnergyType.Electricity).OrderBy(e => e.Odometer).ToList();
-        var electricOnlyEntries = allEntries.Where(e => e.EnergyType == EnergyType.Electricity).OrderBy(e => e.Odometer).ToList();
+        // Calculate efficiency metrics using entries with odometer
+        var firstEntry = entriesWithOdometer.First();
+        var lastEntry = entriesWithOdometer.Last();
+        var totalKm = lastEntry.Odometer!.Value - firstEntry.Odometer!.Value;
 
-        var totalKilometers = allEntries.Last().Odometer - allEntries.First().Odometer;
-        
-        // Calculate fuel statistics
-        var totalFuelLiters = fuelOnlyEntries.Sum(f => f.Amount);
-        var totalFuelCost = fuelOnlyEntries.Sum(f => f.Cost);
-        
-        // Calculate electricity statistics
-        var totalElectricityKwh = electricOnlyEntries.Sum(f => f.Amount);
-        var totalElectricityCost = electricOnlyEntries.Sum(f => f.Cost);
-        
-        // Combined cost per km
-        var totalEnergyCost = totalFuelCost + totalElectricityCost;
-        var avgCostPerKm = totalKilometers > 0 ? totalEnergyCost / totalKilometers : 0;
+        // Only calculate efficiency if we've traveled some distance
+        if (totalKm <= 0)
+        {
+            return new FuelEfficiencyDto
+            {
+                VehicleId = vehicleId,
+                TotalCost = totalCost,
+                TotalAmount = totalAmount,
+                TotalKilometers = 0,
+                AverageLitersPer100Km = null,
+                AverageKilometersPerLiter = null,
+                AverageCostPerKilometer = null,
+                AverageCostPerFillUp = allEntries.Count > 0 ? totalCost / allEntries.Count : 0,
+                TotalFillUps = allEntries.Count,
+                EntriesWithOdometer = entriesWithOdometer.Count,
+                EntriesWithoutOdometer = allEntries.Count - entriesWithOdometer.Count
+            };
+        }
 
-        // Fuel efficiency (L/100km)
-        var litersPer100Km = totalKilometers > 0 && totalFuelLiters > 0 
-            ? (totalFuelLiters / totalKilometers) * 100 
-            : 0;
-        var fuelCostPerKm = totalKilometers > 0 && totalFuelCost > 0
-            ? totalFuelCost / totalKilometers 
-            : 0;
-
-        // Electric efficiency (kWh/100km)
-        var kwhPer100Km = totalKilometers > 0 && totalElectricityKwh > 0
-            ? (totalElectricityKwh / totalKilometers) * 100 
-            : 0;
-        var electricCostPerKm = totalKilometers > 0 && totalElectricityCost > 0
-            ? totalElectricityCost / totalKilometers 
-            : 0;
+        // Calculate efficiency using only entries with odometer (excluding first entry)
+        var fuelUsedForEfficiency = entriesWithOdometer.Skip(1).Sum(f => f.Amount);
+        var averageLitersPer100Km = (fuelUsedForEfficiency / totalKm) * 100;
+        var averageKmPerLiter = totalKm / fuelUsedForEfficiency;
+        var averageCostPerKm = totalCost / totalKm;
 
         return new FuelEfficiencyDto
         {
             VehicleId = vehicleId,
-            VehicleMake = vehicle.Make,
-            VehicleModel = vehicle.Model,
-            VehicleType = vehicle.VehicleType,
-            
-            // Fuel stats
-            TotalFuelLiters = totalFuelLiters,
-            TotalFuelCost = totalFuelCost,
-            AverageLitersPer100Km = Math.Round(litersPer100Km, 2),
-            AverageFuelCostPerKm = Math.Round(fuelCostPerKm, 4),
-            
-            // Electric stats
-            TotalElectricityKwh = totalElectricityKwh,
-            TotalElectricityCost = totalElectricityCost,
-            AverageKwhPer100Km = Math.Round(kwhPer100Km, 2),
-            AverageElectricityCostPerKm = Math.Round(electricCostPerKm, 4),
-            
-            // Combined stats
-            TotalEnergyCost = totalEnergyCost,
-            AverageCostPerKm = Math.Round(avgCostPerKm, 4),
-            TotalKilometers = totalKilometers,
-            
-            FirstEntryDate = allEntries.First().Date,
-            LastEntryDate = allEntries.Last().Date,
-            NumberOfFuelEntries = fuelOnlyEntries.Count,
-            NumberOfChargeEntries = electricOnlyEntries.Count
+            TotalCost = totalCost,
+            TotalAmount = totalAmount,
+            TotalKilometers = totalKm,
+            AverageLitersPer100Km = Math.Round(averageLitersPer100Km, 2),
+            AverageKilometersPerLiter = Math.Round(averageKmPerLiter, 2),
+            AverageCostPerKilometer = Math.Round(averageCostPerKm, 4),
+            AverageCostPerFillUp = allEntries.Count > 0 ? Math.Round(totalCost / allEntries.Count, 2) : 0,
+            TotalFillUps = allEntries.Count,
+            EntriesWithOdometer = entriesWithOdometer.Count,
+            EntriesWithoutOdometer = allEntries.Count - entriesWithOdometer.Count
         };
     }
 

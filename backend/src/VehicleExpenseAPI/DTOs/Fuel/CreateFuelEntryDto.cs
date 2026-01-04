@@ -4,10 +4,10 @@ namespace VehicleExpenseAPI.DTOs.Fuel;
 
 public class CreateFuelEntryDto
 {
-    public EnergyType EnergyType { get; set; }
-    public decimal Amount { get; set; }  // Liters or kWh depending on EnergyType
-    public decimal Cost { get; set; }
-    public int Odometer { get; set; }
-    public DateOnly Date { get; set; }
-    public int VehicleId { get; set; }
+    public required EnergyType EnergyType { get; set; }
+    public required decimal Amount { get; set; }
+    public required decimal Cost { get; set; }
+    public int? Odometer { get; set; }
+    public required DateOnly Date { get; set; }
+    public required int VehicleId { get; set; }
 }

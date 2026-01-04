@@ -40,7 +40,7 @@ export default function FuelForm({ fuelEntry, vehicles, preSelectedVehicleId, on
   const [energyType, setEnergyType] = useState<number>(fuelEntry?.energyType ?? EnergyType.Gasoline);
   const [amount, setAmount] = useState(fuelEntry?.amount.toString() || '');
   const [cost, setCost] = useState(fuelEntry?.cost.toString() || '');
-  const [odometer, setOdometer] = useState(fuelEntry?.odometer.toString() || '');
+  const [odometer, setOdometer] = useState(fuelEntry?.odometer?.toString() || '');
   const [date, setDate] = useState(toDateInputValue(fuelEntry?.date) || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -89,9 +89,9 @@ export default function FuelForm({ fuelEntry, vehicles, preSelectedVehicleId, on
       return;
     }
 
-    const odometerNum = parseInt(odometer);
-    if (isNaN(odometerNum) || odometerNum < 0) {
-      setError('Odometer reading must be a positive number');
+   const odometerNum = odometer ? parseInt(odometer) : null;
+    if (odometerNum !== null && (isNaN(odometerNum) || odometerNum < 0)) {
+      setError('Odometer reading must be a positive number or left blank');
       return;
     }
 
@@ -256,20 +256,20 @@ export default function FuelForm({ fuelEntry, vehicles, preSelectedVehicleId, on
           </div>
 
           <div>
-            <label htmlFor="odometer" className="block text-sm font-medium text-gray-300 mb-1">
-              Odometer Reading (km) *
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Odometer (km) - Optional
             </label>
             <input
               type="number"
-              id="odometer"
-              value={odometer}
+              value={odometer || ''}
               onChange={(e) => setOdometer(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Leave blank if unknown (can add later)"
               min="0"
-              required
-              disabled={loading}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="25000"
             />
+            <p className="text-xs text-gray-400 mt-1">
+              Add odometer reading to track fuel efficiency. You can add this later if you don't have it now.
+            </p>
           </div>
 
           <div>

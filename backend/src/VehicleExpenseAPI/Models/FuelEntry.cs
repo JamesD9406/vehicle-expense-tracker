@@ -5,32 +5,29 @@ namespace VehicleExpenseAPI.Models;
 public class FuelEntry
 {
     public int Id { get; set; }
-    
+
+    [Required]
     public EnergyType EnergyType { get; set; }
-    
-    // Amount of energy added (liters for fuel, kWh for electricity)
-    [Range(0.01, double.MaxValue)]
+
+    [Required]
+    [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than 0")]
     public decimal Amount { get; set; }
-    
-    [Range(0.01, double.MaxValue)]
+
+    [Required]
+    [Range(0.01, double.MaxValue, ErrorMessage = "Cost must be greater than 0")]
     public decimal Cost { get; set; }
-    
-    [Range(0, int.MaxValue)]
-    public int Odometer { get; set; }
-    
+
+    [Range(0, int.MaxValue, ErrorMessage = "Odometer must be 0 or greater")]
+    public int? Odometer { get; set; }
+
     [Required]
     public DateOnly Date { get; set; }
-    
-    // Foreign key to Vehicle
-    [Required]
+
+    // Foreign key
     public int VehicleId { get; set; }
-    
-    // Navigation property
     public Vehicle? Vehicle { get; set; }
-    
-    // Foreign key to Expense (nullable - FuelEntry can exist without an Expense)
+
+    // Link to corresponding Expense entry
     public int? ExpenseId { get; set; }
-    
-    // Navigation property to the linked Fuel Expense
     public Expense? Expense { get; set; }
 }

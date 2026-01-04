@@ -8,6 +8,7 @@ import { vehicleService } from '../services/vehicleService';
 import { formatCurrency, formatDateOnly } from '../utils/helpers';
 import type { Expense, CreateExpenseDto, UpdateExpenseDto } from '../types/Expense';
 import type { Vehicle } from '../types/Vehicle';
+import { Link } from 'react-router-dom';
 
 export function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -26,7 +27,7 @@ export function ExpensesPage() {
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>(undefined);
 
   const categoryOptions = [
-    { value: 0, label: 'Fuel' },
+    // { value: 0, label: 'Fuel' }, // REMOVED - Use Fuel page instead
     { value: 1, label: 'Maintenance' },
     { value: 2, label: 'Insurance' },
     { value: 3, label: 'Registration' },
@@ -185,6 +186,9 @@ export function ExpensesPage() {
               <h1 className="text-3xl font-bold text-white">Expenses</h1>
               <p className="mt-2 text-sm text-gray-400">
                 Track and categorize all your vehicle expenses
+              </p>
+              <p className="text-sm text-gray-400 mb-4">
+                To log fuel costs, use the <Link to="/fuel" className="text-blue-400 hover:underline">Fuel page</Link>
               </p>
             </div>
             <button
