@@ -420,175 +420,234 @@ public class DatabaseSeeder
         _logger.LogInformation("Created {Count} expenses", expenses.Count);
     }
 
-   private async Task CreateTestFuelEntriesAsync(List<Vehicle> vehicles)
-  {
-      _logger.LogInformation("Creating test fuel entries...");
+    private async Task CreateTestFuelEntriesAsync(List<Vehicle> vehicles)
+    {
+        _logger.LogInformation("Creating test fuel entries and expenses...");
 
-      var fuelEntries = new List<FuelEntry>();
-      var fuelExpenses = new List<Expense>();
-      var baseDate = DateOnly.FromDateTime(DateTime.UtcNow);
-      var random = new Random(42); // Seed for consistent results
+        var fuelEntries = new List<FuelEntry>();
+        var fuelExpensesWithEntry = new List<Expense>();
+        var standaloneFuelExpenses = new List<Expense>();
+        var baseDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var random = new Random(42); // Seed for consistent results
 
-      foreach (var vehicle in vehicles)
-      {
-          var ownershipMonths = (baseDate.DayNumber - vehicle.OwnershipStart.DayNumber) / 30;
+        foreach (var vehicle in vehicles)
+        {
+            // Calculate ownership months
+            var endDate = vehicle.OwnershipEnd ?? baseDate;
+            var ownershipMonths = (endDate.DayNumber - vehicle.OwnershipStart.DayNumber) / 30;
 
-          // Starting odometer based on vehicle age
-          var vehicleAge = DateTime.UtcNow.Year - vehicle.Year;
-          var baseOdometer = vehicleAge * 15000; // 15,000 km/year before purchase
-          var currentOdometer = baseOdometer;
+            // Skip very short ownership periods
+            if (ownershipMonths < 1)
+                continue;
 
-          // Create fuel entries (about 4 per month, max 50)
-          var entryCount = Math.Min(ownershipMonths * 4, 50);
+            // Create fuel entries with realistic progression (about 4 fill-ups per month, max 50 entries)
+            var fillUpCount = Math.Min(ownershipMonths * 4, 50);
+            
+            // Calculate starting odometer based on vehicle age at purchase
+            var vehicleAgeAtPurchase = vehicle.OwnershipStart.Year - vehicle.Year;
+            var startingOdometer = vehicleAgeAtPurchase * 15000; // ~15,000 km/year before purchase
+            var currentOdometer = startingOdometer;
 
-          for (int i = 0; i < entryCount; i++)
-          {
-              var daysAgo = (entryCount - i) * 7; // About weekly
-              var entryDate = baseDate.AddDays(-daysAgo);
+            // Generate fuel entries
+            for (int i = 0; i < fillUpCount; i++)
+            {
+                // Weekly intervals
+                var weeksOwned = (int)(ownershipMonths * 4.33);
+                var weekOffset = -random.Next(0, weeksOwned);
+                var entryDate = baseDate.AddDays(weekOffset * 7);
 
-              // Skip if before ownership
-              if (entryDate < vehicle.OwnershipStart)
-                  continue;
+                // Skip if before ownership start or after ownership end
+                if (entryDate < vehicle.OwnershipStart || 
+                    (vehicle.OwnershipEnd.HasValue && entryDate > vehicle.OwnershipEnd.Value))
+                    continue;
 
-              // Skip if after vehicle was sold
-              if (vehicle.OwnershipEnd.HasValue && entryDate > vehicle.OwnershipEnd.Value)
-                  continue;
+                // Increment odometer (200-500 km per week)
+                currentOdometer += random.Next(200, 500);
 
-              // Increment odometer (200-500 km per week)
-              currentOdometer += random.Next(200, 500);
+                // Create fuel entry and expense based on vehicle type
+                switch (vehicle.VehicleType)
+                {
+                    case VehicleType.Gasoline:
+                        var litersGas = random.Next(30, 55);
+                        var pricePerLiterGas = (decimal)(random.Next(135, 165) / 100.0);
+                        var fuelCostGas = litersGas * pricePerLiterGas;
+                        var fuelNoteGas = $"Gasoline fill-up: {litersGas}L";
 
-              decimal fuelCost = 0; // Track cost for matching expense
-              string fuelNote = ""; // Track note for expense
+                        fuelEntries.Add(new FuelEntry
+                        {
+                            EnergyType = EnergyType.Gasoline,
+                            Amount = litersGas,
+                            Cost = fuelCostGas,
+                            Odometer = currentOdometer,
+                            Date = entryDate,
+                            VehicleId = vehicle.Id
+                        });
 
-              switch (vehicle.VehicleType)
-              {
-                  case VehicleType.Gasoline:
-                  case VehicleType.Diesel:
-                      var litersFuel = random.Next(30, 60);
-                      var pricePerLiter = vehicle.VehicleType == VehicleType.Diesel
-                          ? (decimal)(random.Next(145, 175) / 100.0) // $1.45-$1.75/L
-                          : (decimal)(random.Next(135, 165) / 100.0); // $1.35-$1.65/L
+                        fuelExpensesWithEntry.Add(new Expense
+                        {
+                            Category = ExpenseCategory.Fuel,
+                            Amount = fuelCostGas,
+                            Date = entryDate,
+                            Notes = fuelNoteGas,
+                            VehicleId = vehicle.Id
+                        });
+                        break;
 
-                      fuelCost = litersFuel * pricePerLiter;
-                      fuelNote = vehicle.VehicleType == VehicleType.Diesel 
-                          ? $"Diesel fill-up: {litersFuel}L" 
-                          : $"Gasoline fill-up: {litersFuel}L";
+                    case VehicleType.Diesel:
+                        var litersDiesel = random.Next(35, 60);
+                        var pricePerLiterDiesel = (decimal)(random.Next(145, 175) / 100.0);
+                        var fuelCostDiesel = litersDiesel * pricePerLiterDiesel;
+                        var fuelNoteDiesel = $"Diesel fill-up: {litersDiesel}L";
 
-                      fuelEntries.Add(new FuelEntry
-                      {
-                          EnergyType = vehicle.VehicleType == VehicleType.Diesel
-                              ? EnergyType.Diesel
-                              : EnergyType.Gasoline,
-                          Amount = litersFuel,
-                          Cost = fuelCost,
-                          Odometer = currentOdometer,
-                          Date = entryDate,
-                          VehicleId = vehicle.Id
-                      });
-                      break;
+                        fuelEntries.Add(new FuelEntry
+                        {
+                            EnergyType = EnergyType.Diesel,
+                            Amount = litersDiesel,
+                            Cost = fuelCostDiesel,
+                            Odometer = currentOdometer,
+                            Date = entryDate,
+                            VehicleId = vehicle.Id
+                        });
 
-                  case VehicleType.Electric:
-                      var kwhElectric = random.Next(40, 75);
-                      var pricePerKwh = (decimal)(random.Next(12, 20) / 100.0); // $0.12-$0.20/kWh
+                        fuelExpensesWithEntry.Add(new Expense
+                        {
+                            Category = ExpenseCategory.Fuel,
+                            Amount = fuelCostDiesel,
+                            Date = entryDate,
+                            Notes = fuelNoteDiesel,
+                            VehicleId = vehicle.Id
+                        });
+                        break;
 
-                      fuelCost = kwhElectric * pricePerKwh;
-                      fuelNote = $"Charging session: {kwhElectric} kWh";
+                    case VehicleType.Electric:
+                        var kwhElectric = random.Next(30, 60);
+                        var pricePerKwhElectric = (decimal)(random.Next(12, 20) / 100.0);
+                        var fuelCostElectric = kwhElectric * pricePerKwhElectric;
+                        var fuelNoteElectric = $"Charging session: {kwhElectric} kWh";
 
-                      fuelEntries.Add(new FuelEntry
-                      {
-                          EnergyType = EnergyType.Electricity,
-                          Amount = kwhElectric,
-                          Cost = fuelCost,
-                          Odometer = currentOdometer,
-                          Date = entryDate,
-                          VehicleId = vehicle.Id
-                      });
-                      break;
+                        fuelEntries.Add(new FuelEntry
+                        {
+                            EnergyType = EnergyType.Electricity,
+                            Amount = kwhElectric,
+                            Cost = fuelCostElectric,
+                            Odometer = currentOdometer,
+                            Date = entryDate,
+                            VehicleId = vehicle.Id
+                        });
 
-                  case VehicleType.Hybrid:
-                  case VehicleType.PlugInHybrid:
-                      // Alternate between gas and electric
-                      var useElectric = vehicle.VehicleType == VehicleType.PlugInHybrid
-                          ? random.Next(0, 10) < 7 // 70% electric for PHEV
-                          : random.Next(0, 10) < 3; // 30% electric for hybrid
+                        fuelExpensesWithEntry.Add(new Expense
+                        {
+                            Category = ExpenseCategory.Fuel,
+                            Amount = fuelCostElectric,
+                            Date = entryDate,
+                            Notes = fuelNoteElectric,
+                            VehicleId = vehicle.Id
+                        });
+                        break;
 
-                      if (useElectric)
-                      {
-                          var kwhHybrid = random.Next(15, 35);
-                          var pricePerKwhHybrid = (decimal)(random.Next(12, 20) / 100.0);
+                    case VehicleType.Hybrid:
+                    case VehicleType.PlugInHybrid:
+                        // Alternate between gas and electric
+                        var useElectric = vehicle.VehicleType == VehicleType.PlugInHybrid
+                            ? random.Next(0, 10) < 7 // 70% electric for PHEV
+                            : random.Next(0, 10) < 3; // 30% electric for hybrid
 
-                          fuelCost = kwhHybrid * pricePerKwhHybrid;
-                          fuelNote = $"Charging session: {kwhHybrid} kWh";
+                        if (useElectric)
+                        {
+                            var kwhHybrid = random.Next(15, 35);
+                            var pricePerKwhHybrid = (decimal)(random.Next(12, 20) / 100.0);
+                            var fuelCostHybridElec = kwhHybrid * pricePerKwhHybrid;
+                            var fuelNoteHybridElec = $"Charging session: {kwhHybrid} kWh";
 
-                          fuelEntries.Add(new FuelEntry
-                          {
-                              EnergyType = EnergyType.Electricity,
-                              Amount = kwhHybrid,
-                              Cost = fuelCost,
-                              Odometer = currentOdometer,
-                              Date = entryDate,
-                              VehicleId = vehicle.Id
-                          });
-                      }
-                      else
-                      {
-                          var litersHybrid = random.Next(25, 45);
-                          var pricePerLiterHybrid = (decimal)(random.Next(135, 165) / 100.0);
+                            fuelEntries.Add(new FuelEntry
+                            {
+                                EnergyType = EnergyType.Electricity,
+                                Amount = kwhHybrid,
+                                Cost = fuelCostHybridElec,
+                                Odometer = currentOdometer,
+                                Date = entryDate,
+                                VehicleId = vehicle.Id
+                            });
 
-                          fuelCost = litersHybrid * pricePerLiterHybrid;
-                          fuelNote = $"Gasoline fill-up: {litersHybrid}L";
+                            fuelExpensesWithEntry.Add(new Expense
+                            {
+                                Category = ExpenseCategory.Fuel,
+                                Amount = fuelCostHybridElec,
+                                Date = entryDate,
+                                Notes = fuelNoteHybridElec,
+                                VehicleId = vehicle.Id
+                            });
+                        }
+                        else
+                        {
+                            var litersHybrid = random.Next(25, 45);
+                            var pricePerLiterHybrid = (decimal)(random.Next(135, 165) / 100.0);
+                            var fuelCostHybridGas = litersHybrid * pricePerLiterHybrid;
+                            var fuelNoteHybridGas = $"Gasoline fill-up: {litersHybrid}L";
 
-                          fuelEntries.Add(new FuelEntry
-                          {
-                              EnergyType = EnergyType.Gasoline,
-                              Amount = litersHybrid,
-                              Cost = fuelCost,
-                              Odometer = currentOdometer,
-                              Date = entryDate,
-                              VehicleId = vehicle.Id
-                          });
-                      }
-                      break;
-              }
+                            fuelEntries.Add(new FuelEntry
+                            {
+                                EnergyType = EnergyType.Gasoline,
+                                Amount = litersHybrid,
+                                Cost = fuelCostHybridGas,
+                                Odometer = currentOdometer,
+                                Date = entryDate,
+                                VehicleId = vehicle.Id
+                            });
 
-              // Create matching fuel expense for every fuel entry
-              fuelExpenses.Add(new Expense
-              {
-                  Category = ExpenseCategory.Fuel,
-                  Amount = fuelCost,
-                  Date = entryDate,
-                  Notes = fuelNote,
-                  VehicleId = vehicle.Id
-              });
-          }
+                            fuelExpensesWithEntry.Add(new Expense
+                            {
+                                Category = ExpenseCategory.Fuel,
+                                Amount = fuelCostHybridGas,
+                                Date = entryDate,
+                                Notes = fuelNoteHybridGas,
+                                VehicleId = vehicle.Id
+                            });
+                        }
+                        break;
+                }
+            }
 
-          // Add somestandalone fuel expenses - these represent fuel purchases where odometer wasn't recorded
-          var standaloneFuelCount = Math.Min(random.Next(1, 3), ownershipMonths / 3);
-          for (int i = 0; i < standaloneFuelCount; i++)
-          {
-              var expenseDate = baseDate.AddMonths(-random.Next(0, ownershipMonths));
-              
-              // Skip if after vehicle was sold
-              if (vehicle.OwnershipEnd.HasValue && expenseDate > vehicle.OwnershipEnd.Value)
-                  continue;
+            // Add standalone fuel expenses - these represent fuel purchases where odometer wasn't recorded
+            var standaloneFuelCount = Math.Min(random.Next(1, 3), ownershipMonths / 3);
+            for (int i = 0; i < standaloneFuelCount; i++)
+            {
+                var expenseDate = baseDate.AddMonths(-random.Next(0, ownershipMonths));
+                
+                // Skip if after vehicle was sold
+                if (vehicle.OwnershipEnd.HasValue && expenseDate > vehicle.OwnershipEnd.Value)
+                    continue;
 
-              fuelExpenses.Add(new Expense
-              {
-                  Category = ExpenseCategory.Fuel,
-                  Amount = random.Next(40, 90),
-                  Date = expenseDate,
-                  Notes = "Fuel purchase (odometer not recorded)",
-                  VehicleId = vehicle.Id
-              });
-          }
-      }
+                standaloneFuelExpenses.Add(new Expense
+                {
+                    Category = ExpenseCategory.Fuel,
+                    Amount = random.Next(40, 90),
+                    Date = expenseDate,
+                    Notes = "Fuel purchase (odometer not recorded)",
+                    VehicleId = vehicle.Id
+                });
+            }
+        }
 
-      await _context.FuelEntries.AddRangeAsync(fuelEntries);
-      await _context.Expenses.AddRangeAsync(fuelExpenses); // NEW: Save fuel expenses
-      await _context.SaveChangesAsync();
+        // CRITICAL: Save expenses FIRST so they get IDs
+        await _context.Expenses.AddRangeAsync(fuelExpensesWithEntry);
+        await _context.Expenses.AddRangeAsync(standaloneFuelExpenses);
+        await _context.SaveChangesAsync();
 
-      _logger.LogInformation("Created {FuelEntryCount} fuel entries and {FuelExpenseCount} fuel expenses", 
-          fuelEntries.Count, fuelExpenses.Count);
-  }
+        // Now link FuelEntries to their corresponding Expenses (1:1 relationship)
+        for (int i = 0; i < fuelEntries.Count; i++)
+        {
+            fuelEntries[i].ExpenseId = fuelExpensesWithEntry[i].Id;
+        }
+
+        // Save FuelEntries with linked ExpenseIds
+        await _context.FuelEntries.AddRangeAsync(fuelEntries);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Created {FuelEntryCount} fuel entries (with linked expenses) and {StandaloneCount} standalone fuel expenses", 
+            fuelEntries.Count, 
+            standaloneFuelExpenses.Count);
+    }
 
 }

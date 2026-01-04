@@ -65,6 +65,24 @@ public class FuelService
             return null;
         }
 
+        // Create the Fuel Expense first (so it gets an ID)
+        var fuelNote = createDto.EnergyType == EnergyType.Electricity
+            ? $"Charging session: {createDto.Amount} kWh"
+            : $"{(createDto.EnergyType == EnergyType.Diesel ? "Diesel" : "Gasoline")} fill-up: {createDto.Amount}L";
+
+        var fuelExpense = new Expense
+        {
+            Category = ExpenseCategory.Fuel,
+            Amount = createDto.Cost,
+            Date = createDto.Date,
+            Notes = fuelNote,
+            VehicleId = createDto.VehicleId
+        };
+
+        _context.Expenses.Add(fuelExpense);
+        await _context.SaveChangesAsync(); // Save to get the Expense ID
+
+        // Now create the FuelEntry linked to the Expense
         var fuelEntry = new FuelEntry
         {
             EnergyType = createDto.EnergyType,
@@ -73,7 +91,8 @@ public class FuelService
             Odometer = createDto.Odometer,
             Date = createDto.Date,
             VehicleId = createDto.VehicleId,
-            Vehicle = vehicle
+            Vehicle = vehicle,
+            ExpenseId = fuelExpense.Id
         };
 
         _context.FuelEntries.Add(fuelEntry);
@@ -86,6 +105,7 @@ public class FuelService
     {
         var fuelEntry = await _context.FuelEntries
             .Include(f => f.Vehicle)
+            .Include(f => f.Expense) // Include the linked expense
             .Where(f => f.Id == id && f.Vehicle!.UserId == userId)
             .FirstOrDefaultAsync();
 
@@ -108,13 +128,30 @@ public class FuelService
             
             fuelEntry.VehicleId = updateDto.VehicleId;
             fuelEntry.Vehicle = newVehicle;
+            
+            // Also update the linked expense's vehicle
+            if (fuelEntry.Expense != null)
+            {
+                fuelEntry.Expense.VehicleId = updateDto.VehicleId;
+            }
         }
 
+        // Update FuelEntry fields
         fuelEntry.EnergyType = updateDto.EnergyType;
         fuelEntry.Amount = updateDto.Amount;
         fuelEntry.Cost = updateDto.Cost;
         fuelEntry.Odometer = updateDto.Odometer;
         fuelEntry.Date = updateDto.Date;
+
+        // Update the linked Expense to match
+        if (fuelEntry.Expense != null)
+        {
+            fuelEntry.Expense.Amount = updateDto.Cost;
+            fuelEntry.Expense.Date = updateDto.Date;
+            fuelEntry.Expense.Notes = updateDto.EnergyType == EnergyType.Electricity
+                ? $"Charging session: {updateDto.Amount} kWh"
+                : $"{(updateDto.EnergyType == EnergyType.Diesel ? "Diesel" : "Gasoline")} fill-up: {updateDto.Amount}L";
+        }
 
         await _context.SaveChangesAsync();
 
@@ -125,12 +162,19 @@ public class FuelService
     {
         var fuelEntry = await _context.FuelEntries
             .Include(f => f.Vehicle)
+            .Include(f => f.Expense) // Include the linked expense
             .Where(f => f.Id == id && f.Vehicle!.UserId == userId)
             .FirstOrDefaultAsync();
 
         if (fuelEntry == null)
         {
             return false;
+        }
+
+        // Delete the linked Fuel Expense too
+        if (fuelEntry.Expense != null)
+        {
+            _context.Expenses.Remove(fuelEntry.Expense);
         }
 
         _context.FuelEntries.Remove(fuelEntry);

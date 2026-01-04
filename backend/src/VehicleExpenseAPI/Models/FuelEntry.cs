@@ -27,4 +27,10 @@ public class FuelEntry
     
     // Navigation property
     public Vehicle? Vehicle { get; set; }
+    
+    // Foreign key to Expense (nullable - FuelEntry can exist without an Expense)
+    public int? ExpenseId { get; set; }
+    
+    // Navigation property to the linked Fuel Expense
+    public Expense? Expense { get; set; }
 }
