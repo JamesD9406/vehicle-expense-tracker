@@ -10,7 +10,7 @@ public class FuelEntryDto
     public decimal Amount { get; set; }
     public string Unit { get; set; } = string.Empty;  // "L" or "kWh"
     public decimal Cost { get; set; }
-    public int Odometer { get; set; }
+    public int? Odometer { get; set; }
     public DateOnly Date { get; set; }
     public int VehicleId { get; set; }
     

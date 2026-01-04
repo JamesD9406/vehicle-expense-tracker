@@ -1,7 +1,7 @@
 export const EnergyType = {
   Gasoline: 0,
   Diesel: 1,
-  Electricity: 2,
+  Electricity: 2
 } as const;
 
 export type EnergyType = typeof EnergyType[keyof typeof EnergyType];
@@ -11,52 +11,45 @@ export interface FuelEntry {
   energyType: number;
   energyTypeDisplay: string;
   amount: number;
-  unit: string;
+  unit: string;  
   cost: number;
-  odometer: number;
+  costPerUnit: number; 
+  odometer?: number | null;
   date: string;
   vehicleId: number;
-  vehicleMake: string;
-  vehicleModel: string;
-  vehicleType: number;
-  costPerUnit: number;
+  // Vehicle details
+  vehicleMake: string;  
+  vehicleModel: string; 
+  vehicleType: number; 
 }
 
 export interface CreateFuelEntryDto {
   energyType: number;
   amount: number;
   cost: number;
-  odometer: number;
+  odometer?: number | null;
   date: string;
   vehicleId: number;
 }
 
 export interface UpdateFuelEntryDto {
-  energyType: number;
-  amount: number;
-  cost: number;
-  odometer: number;
-  date: string;
+  energyType?: number;
+  amount?: number;
+  cost?: number;
+  odometer?: number | null; 
+  date?: string;
 }
 
 export interface FuelEfficiencyDto {
   vehicleId: number;
-  vehicleMake: string;
-  vehicleModel: string;
-  vehicleType: number;
-  totalFuelLiters: number;
-  totalFuelCost: number;
-  averageLitersPer100Km: number;
-  averageFuelCostPerKm: number;
-  totalElectricityKwh: number;
-  totalElectricityCost: number;
-  averageKwhPer100Km: number;
-  averageElectricityCostPerKm: number;
-  totalEnergyCost: number;
-  averageCostPerKm: number;
+  totalCost: number;
+  totalAmount: number;
   totalKilometers: number;
-  firstEntryDate?: string;
-  lastEntryDate?: string;
-  numberOfFuelEntries: number;
-  numberOfChargeEntries: number;
+  averageLitersPer100Km: number | null;
+  averageKilometersPerLiter: number | null;
+  averageCostPerKilometer: number | null;
+  averageCostPerFillUp: number;
+  totalFillUps: number;
+  entriesWithOdometer: number;
+  entriesWithoutOdometer: number;
 }

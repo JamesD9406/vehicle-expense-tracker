@@ -485,7 +485,7 @@ public class DatabaseSeeder
 
                         fuelExpensesWithEntry.Add(new Expense
                         {
-                            Category = ExpenseCategory.Fuel,
+                            Category = ExpenseCategory.Other,
                             Amount = fuelCostGas,
                             Date = entryDate,
                             Notes = fuelNoteGas,
@@ -511,7 +511,7 @@ public class DatabaseSeeder
 
                         fuelExpensesWithEntry.Add(new Expense
                         {
-                            Category = ExpenseCategory.Fuel,
+                            Category = ExpenseCategory.Other,
                             Amount = fuelCostDiesel,
                             Date = entryDate,
                             Notes = fuelNoteDiesel,
@@ -537,7 +537,7 @@ public class DatabaseSeeder
 
                         fuelExpensesWithEntry.Add(new Expense
                         {
-                            Category = ExpenseCategory.Fuel,
+                            Category = ExpenseCategory.Other,
                             Amount = fuelCostElectric,
                             Date = entryDate,
                             Notes = fuelNoteElectric,
@@ -571,7 +571,7 @@ public class DatabaseSeeder
 
                             fuelExpensesWithEntry.Add(new Expense
                             {
-                                Category = ExpenseCategory.Fuel,
+                                Category = ExpenseCategory.Other,
                                 Amount = fuelCostHybridElec,
                                 Date = entryDate,
                                 Notes = fuelNoteHybridElec,
@@ -597,7 +597,7 @@ public class DatabaseSeeder
 
                             fuelExpensesWithEntry.Add(new Expense
                             {
-                                Category = ExpenseCategory.Fuel,
+                                Category = ExpenseCategory.Other,
                                 Amount = fuelCostHybridGas,
                                 Date = entryDate,
                                 Notes = fuelNoteHybridGas,
@@ -607,31 +607,10 @@ public class DatabaseSeeder
                         break;
                 }
             }
-
-            // Add standalone fuel expenses - these represent fuel purchases where odometer wasn't recorded
-            var standaloneFuelCount = Math.Min(random.Next(1, 3), ownershipMonths / 3);
-            for (int i = 0; i < standaloneFuelCount; i++)
-            {
-                var expenseDate = baseDate.AddMonths(-random.Next(0, ownershipMonths));
-                
-                // Skip if after vehicle was sold
-                if (vehicle.OwnershipEnd.HasValue && expenseDate > vehicle.OwnershipEnd.Value)
-                    continue;
-
-                standaloneFuelExpenses.Add(new Expense
-                {
-                    Category = ExpenseCategory.Fuel,
-                    Amount = random.Next(40, 90),
-                    Date = expenseDate,
-                    Notes = "Fuel purchase (odometer not recorded)",
-                    VehicleId = vehicle.Id
-                });
-            }
         }
 
         // CRITICAL: Save expenses FIRST so they get IDs
         await _context.Expenses.AddRangeAsync(fuelExpensesWithEntry);
-        await _context.Expenses.AddRangeAsync(standaloneFuelExpenses);
         await _context.SaveChangesAsync();
 
         // Now link FuelEntries to their corresponding Expenses (1:1 relationship)
@@ -644,10 +623,9 @@ public class DatabaseSeeder
         await _context.FuelEntries.AddRangeAsync(fuelEntries);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation(
-            "Created {FuelEntryCount} fuel entries (with linked expenses) and {StandaloneCount} standalone fuel expenses", 
-            fuelEntries.Count, 
-            standaloneFuelExpenses.Count);
+       _logger.LogInformation(
+        "Created {FuelEntryCount} fuel entries (with linked expenses)", 
+        fuelEntries.Count);
     }
 
 }

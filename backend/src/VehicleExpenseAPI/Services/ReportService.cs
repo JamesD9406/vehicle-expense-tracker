@@ -123,23 +123,18 @@ public class ReportService
             .Where(e => e.VehicleId == vehicleId)
             .ToListAsync();
 
-        // FuelEntries that have linked Expenses should not be counted twice
+        // FuelEntries that have linked Expenses should not be counted in expense categories
         var fuelEntryExpenseIds = fuelEntries
             .Where(f => f.ExpenseId.HasValue)
             .Select(f => f.ExpenseId!.Value)
             .ToHashSet();
 
-        // Get standalone fuel expenses
-        var standaloneFuelExpenses = expenses
-            .Where(e => e.Category == ExpenseCategory.Fuel && !fuelEntryExpenseIds.Contains(e.Id))
-            .ToList();
-
-        // Total fuel cost = FuelEntry costs + standalone Fuel Expense costs
-        var totalFuelCost = fuelEntries.Sum(f => f.Cost) + standaloneFuelExpenses.Sum(e => e.Amount);
+        // Total fuel cost = all FuelEntry costs
+        var totalFuelCost = fuelEntries.Sum(f => f.Cost);
         
-        // Total expenses (excluding ALL Fuel category expenses - they're in "Fuel & Charging")
+        // Total expenses (excluding expenses that are linked to FuelEntries)
         var totalExpensesCost = expenses
-            .Where(e => e.Category != ExpenseCategory.Fuel)
+            .Where(e => !fuelEntryExpenseIds.Contains(e.Id))
             .Sum(e => e.Amount);
         
         var totalCost = vehicle.PurchasePrice + totalFuelCost + totalExpensesCost;
@@ -167,13 +162,13 @@ public class ReportService
                 Category = "Fuel & Charging",
                 Amount = totalFuelCost,
                 Percentage = totalCost > 0 ? Math.Round((totalFuelCost / totalCost) * 100, 2) : 0,
-                Count = fuelEntries.Count + standaloneFuelExpenses.Count
+                Count = fuelEntries.Count
             });
         }
 
-        // Add expense categories (EXCLUDE Fuel category - it's already in "Fuel & Charging")
+        // Add expense categories (EXCLUDE expenses linked to FuelEntries)
         var expenseGroups = expenses
-            .Where(e => e.Category != ExpenseCategory.Fuel)
+            .Where(e => !fuelEntryExpenseIds.Contains(e.Id))
             .GroupBy(e => e.Category)
             .Select(g => new CategoryBreakdownItem
             {

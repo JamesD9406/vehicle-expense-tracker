@@ -277,7 +277,8 @@ export default function FuelPage() {
                           {formatCurrency(entry.costPerUnit)}/{entry.unit}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                          {entry.odometer.toLocaleString()} km
+                          {entry.odometer ? `${entry.odometer.toLocaleString()} km` : 'N/A'}
+
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
