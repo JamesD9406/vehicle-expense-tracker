@@ -369,7 +369,7 @@ Example Response (Login):
 - Users can only access their own data (userId filtering)
 
 ## 🏗️ Project Structure
-
+```
 vehicle-expense-tracker/
 ├── backend/
 │   ├── src/
@@ -438,6 +438,7 @@ vehicle-expense-tracker/
 ├── docker-compose.yml
 ├── docker-compose.prod.yml
 └── README.md
+```
 
 ## 🚀 Running Locally
 
