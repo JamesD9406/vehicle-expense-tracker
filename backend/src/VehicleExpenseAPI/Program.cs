@@ -19,8 +19,13 @@ builder.Services.AddControllers();
 
 // Configure Entity Framework with PostgreSQL
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true); //No explicit timezone requirement
+
+// Get connection string - prioritize DATABASE_URL from Fly.io, fallback to appsettings.json
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // Configure ASP.NET Core Identity
 builder.Services.AddIdentity<User, IdentityRole>(options =>
@@ -63,8 +68,18 @@ builder.Services.Configure<FormOptions>(options =>
 });
 
 // Configure JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret is not configured");
+// Support both JwtSettings (local) and Jwt__ (Fly.io env vars)
+var jwtSecret = Environment.GetEnvironmentVariable("Jwt__SecretKey")
+    ?? builder.Configuration["JwtSettings:Secret"]
+    ?? throw new InvalidOperationException("JWT Secret is not configured");
+
+var jwtIssuer = Environment.GetEnvironmentVariable("Jwt__Issuer")
+    ?? builder.Configuration["JwtSettings:Issuer"]
+    ?? "VehicleExpenseAPI";
+
+var jwtAudience = Environment.GetEnvironmentVariable("Jwt__Audience")
+    ?? builder.Configuration["JwtSettings:Audience"]
+    ?? "VehicleExpenseApp";
 
 builder.Services.AddAuthentication(options =>
 {
@@ -79,9 +94,9 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
     };
 });
 
@@ -116,14 +131,18 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Configure CORS (for frontend development)
+// Configure CORS (for frontend development and production)
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        policy.WithOrigins(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "https://vehicle-expense-frontend.fly.dev")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 

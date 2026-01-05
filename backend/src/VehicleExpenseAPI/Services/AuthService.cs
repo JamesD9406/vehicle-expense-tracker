@@ -85,10 +85,27 @@ public class AuthService
     private string GenerateJwtToken(User user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
+
+        // Support both JwtSettings (local) and Jwt__ (Fly.io env vars) - same as Program.cs
+        var secretKey = Environment.GetEnvironmentVariable("Jwt__SecretKey")
+            ?? jwtSettings["Secret"]
+            ?? throw new InvalidOperationException("JWT Secret not configured");
+
+        var issuer = Environment.GetEnvironmentVariable("Jwt__Issuer")
+            ?? jwtSettings["Issuer"]
+            ?? "VehicleExpenseAPI";
+
+        var audience = Environment.GetEnvironmentVariable("Jwt__Audience")
+            ?? jwtSettings["Audience"]
+            ?? "VehicleExpenseApp";
+
+        var expirationMinutes = int.Parse(
+            Environment.GetEnvironmentVariable("Jwt__ExpirationMinutes")
+            ?? jwtSettings["ExpirationInMinutes"]
+            ?? "60");
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expirationMinutes = int.Parse(jwtSettings["ExpirationInMinutes"] ?? "60");
 
         var claims = new[]
         {
@@ -98,8 +115,8 @@ public class AuthService
         };
 
         var token = new JwtSecurityToken(
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
+            issuer: issuer,
+            audience: audience,
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
             signingCredentials: credentials
