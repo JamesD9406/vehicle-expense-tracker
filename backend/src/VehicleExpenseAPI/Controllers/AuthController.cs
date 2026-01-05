@@ -28,13 +28,24 @@ public class AuthController : ControllerBase
 
         if (!success)
         {
-            _logger.LogWarning("Registration failed for email: {Email}. Errors: {Errors}", 
+            _logger.LogWarning("Registration failed for email: {Email}. Errors: {Errors}",
                 registerDto.Email, string.Join(", ", errors));
             return BadRequest(new { errors });
         }
 
         _logger.LogInformation("User registered successfully: {Email}", registerDto.Email);
-        return Ok(new { message = "User registered successfully" });
+
+        // Automatically log in the user after registration
+        var loginDto = new LoginDto { Email = registerDto.Email, Password = registerDto.Password };
+        var (loginSuccess, response, error) = await _authService.LoginAsync(loginDto);
+
+        if (!loginSuccess)
+        {
+            _logger.LogWarning("Auto-login failed after registration for email: {Email}", registerDto.Email);
+            return Ok(new { message = "User registered successfully but auto-login failed. Please log in manually." });
+        }
+
+        return Ok(response);
     }
 
     [HttpPost("login")]
