@@ -5,7 +5,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using VehicleExpenseAPI.Data;
 using VehicleExpenseAPI.Models;
-using Serilog;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using VehicleExpenseAPI.Services;
@@ -13,16 +12,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Http.Features;
 using VehicleExpenseAPI.Filters;
 
-
 var builder = WebApplication.CreateBuilder(args);
-
-// Configure Serilog for logging
-// Log.Logger = new LoggerConfiguration()
-//     .ReadFrom.Configuration(builder.Configuration)
-//     .WriteTo.Console()
-//     .CreateLogger();
-
-// builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -146,8 +136,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// app.UseSerilogRequestLogging();
-
 app.UseHttpsRedirection();
 
 app.UseCors();
@@ -179,6 +167,15 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while seeding the database");
     }
 }
+
+// Health check endpoint
+app.MapGet("/health", () => Results.Ok(new { 
+    status = "healthy", 
+    timestamp = DateTime.UtcNow 
+}))
+.AllowAnonymous()
+.WithName("HealthCheck")
+.WithOpenApi();
 
 app.Run();
 

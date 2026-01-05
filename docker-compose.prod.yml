@@ -2,19 +2,17 @@ version: '3.8'
 
 services:
   # ============================================
-  # PostgreSQL Database
+  # PostgreSQL Database (Production)
   # ============================================
   postgres:
     image: postgres:16-alpine
-    container_name: vehicle-expense-db
+    container_name: vehicle-expense-db-prod
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: vehicleexpensedb
-    ports:
-      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_prod:/var/lib/postgresql/data
     networks:
       - vehicle-expense-network
     healthcheck:
@@ -24,17 +22,15 @@ services:
       retries: 5
 
   # ============================================
-  # Backend API (.NET 8)
+  # Backend API (Production)
   # ============================================
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: vehicle-expense-api
-    ports:
-      - "5000:8080"
+    container_name: vehicle-expense-api-prod
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=vehicleexpensedb;Username=postgres;Password=postgres
       - Jwt__SecretKey=YourSuperSecretKeyHere_ChangeInProduction_MinimumLength32Characters
@@ -55,21 +51,17 @@ services:
     restart: unless-stopped
 
   # ============================================
-  # Frontend (React + Vite) - Development Mode
+  # Frontend (Production with Nginx)
   # ============================================
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    container_name: vehicle-expense-frontend
+      dockerfile: Dockerfile.prod
+    container_name: vehicle-expense-frontend-prod
     ports:
-      - "5173:5173"
+      - "80:80"
     environment:
-      - VITE_API_URL=http://localhost:5000
-    volumes:
-      # Mount source code for hot reload
-      - ./frontend:/app
-      - /app/node_modules  # Prevent overwriting node_modules
+      - NODE_ENV=production
     depends_on:
       - backend
     networks:
@@ -81,4 +73,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  postgres_data_prod:
