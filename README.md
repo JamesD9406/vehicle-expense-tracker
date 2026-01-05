@@ -85,25 +85,31 @@ The application is seeded with three test accounts (all use password: Test123):
 ### 🟦 Dashboard Overview
 <p>Shows TCO summary, vehicle count, and quick-access cards.</p>
 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-  <!-- Add screenshot here -->
+ <img src="frontend/public/screenshots/DashboardOverview.png" width="100%" alt="The starting dashboard of the application."/>
 </div>
 
 ### 🟧 Vehicle Management
 <p>List, add, edit, and view detailed vehicle information.</p>
 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-  <!-- Add screenshot here -->
+   <img src="frontend/public/screenshots/VehicleManagement.png" width="100%" alt="Adding, editing, and delteing from your list of available vehicles."/>
 </div>
 
 ### 🟨 Expense Tracking
 <p>Filter and manage expenses by category and vehicle.</p>
 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-  <!-- Add screenshot here -->
+   <img src="frontend/public/screenshots/ExpenseTracking.png" width="100%" alt="Adding, editing, and deleting expenses and filtering by category."/>
+</div>
+
+### 🟨 Fuel Tracking
+<p>Filter and manage expenses by category and vehicle.</p>
+<div style="display: flex; gap: 12px; margin-bottom: 20px;">
+   <img src="frontend/public/screenshots/FuelTracking" width="100%" alt="Adding, editing, and deleting fillups and filtering by vehicle and fuel type."/>
 </div>
 
 ### 🟩 Reports & Analytics
 <p>Visual analytics with charts and TCO breakdowns.</p>
 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-  <!-- Add screenshot here -->
+    <img src="frontend/public/screenshots/Reposrts.png" width="100%" alt="Reports displaying data on various costs, fuel efficiency, and monthly trends."/>
 </div>
 
 ---
