@@ -8,47 +8,31 @@ interface FuelEfficiencyMetricsProps {
 export function FuelEfficiencyMetrics({ efficiency }: FuelEfficiencyMetricsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {efficiency.totalFuelLiters > 0 && (
-        <>
-          <EfficiencyCard
-            title="Fuel Consumption"
-            value={`${efficiency.averageLitersPer100Km.toFixed(2)} L/100km`}
-            subtitle={`${efficiency.totalFuelLiters.toFixed(1)}L total`}
-          />
-          <EfficiencyCard
-            title="Fuel Cost/km"
-            value={formatCurrency(efficiency.averageFuelCostPerKm)}
-            subtitle={`${formatCurrency(efficiency.totalFuelCost)} total`}
-          />
-        </>
+      {efficiency.averageLitersPer100Km && (
+        <EfficiencyCard
+          title="Fuel Consumption"
+          value={`${efficiency.averageLitersPer100Km.toFixed(2)} L/100km`}
+          subtitle={`${efficiency.totalAmount.toFixed(1)}L total`}
+        />
       )}
-      
-      {efficiency.totalElectricityKwh > 0 && (
-        <>
-          <EfficiencyCard
-            title="Electric Consumption"
-            value={`${efficiency.averageKwhPer100Km.toFixed(2)} kWh/100km`}
-            subtitle={`${efficiency.totalElectricityKwh.toFixed(1)}kWh total`}
-          />
-          <EfficiencyCard
-            title="Electric Cost/km"
-            value={formatCurrency(efficiency.averageElectricityCostPerKm)}
-            subtitle={`${formatCurrency(efficiency.totalElectricityCost)} total`}
-          />
-        </>
-      )}
-      
+
       <EfficiencyCard
         title="Average Cost/km"
-        value={formatCurrency(efficiency.averageCostPerKm)}
+        value={formatCurrency(efficiency.averageCostPerKilometer || 0)}
         subtitle={`${efficiency.totalKilometers.toFixed(0)}km tracked`}
         highlight
       />
-      
+
       <EfficiencyCard
-        title="Total Entries"
-        value={`${efficiency.numberOfFuelEntries + efficiency.numberOfChargeEntries}`}
-        subtitle={`${efficiency.numberOfFuelEntries} fuel, ${efficiency.numberOfChargeEntries} electric`}
+        title="Total Cost"
+        value={formatCurrency(efficiency.totalCost)}
+        subtitle={`${efficiency.totalFillUps} fill-ups`}
+      />
+
+      <EfficiencyCard
+        title="Average Cost per Fill-up"
+        value={formatCurrency(efficiency.averageCostPerFillUp)}
+        subtitle={`${efficiency.entriesWithOdometer} with odometer`}
       />
     </div>
   );

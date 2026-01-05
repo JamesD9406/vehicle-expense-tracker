@@ -6,6 +6,8 @@ primary_region = "ord"  # Chicago - change to your preferred region
 
 [build]
   dockerfile = "Dockerfile.prod"
+  [build.args]
+    VITE_API_URL = "https://vehicle-expense-backend.fly.dev/api"
 
 [env]
   NODE_ENV = "production"
@@ -31,5 +33,5 @@ primary_region = "ord"  # Chicago - change to your preferred region
   cpus = 1
   memory_mb = 256
 
-# Secrets to set via CLI:
-# fly secrets set VITE_API_URL="https://vehicle-expense-backend.fly.dev" -a vehicle-expense-frontend
+# Note: VITE_API_URL is set as a build argument in [build.args] above
+# It gets baked into the static files during the Docker build process

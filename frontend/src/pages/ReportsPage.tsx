@@ -202,7 +202,7 @@ export function ReportsPage() {
                 </div>
               )}
 
-              {efficiency && efficiency.numberOfFuelEntries > 0 && (
+              {efficiency && efficiency.totalFillUps > 0 && (
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" />

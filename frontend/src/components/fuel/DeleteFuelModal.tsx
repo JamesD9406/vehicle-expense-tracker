@@ -60,10 +60,12 @@ export default function DeleteFuelModal({ fuelEntry, onConfirm, onCancel }: Dele
                 <span className="font-medium text-gray-300">Cost:</span>{' '}
                 {formatCurrency(fuelEntry.cost)}
               </p>
-              <p className="text-sm text-gray-400">
-                <span className="font-medium text-gray-300">Odometer:</span>{' '}
-                {fuelEntry.odometer.toLocaleString()} km
-              </p>
+              {fuelEntry.odometer && (
+                <p className="text-sm text-gray-400">
+                  <span className="font-medium text-gray-300">Odometer:</span>{' '}
+                  {fuelEntry.odometer.toLocaleString()} km
+                </p>
+              )}
             </div>
 
             {error && (
