@@ -103,13 +103,13 @@ The application is seeded with three test accounts (all use password: Test123):
 ### 🟨 Fuel Tracking
 <p>Filter and manage expenses by category and vehicle.</p>
 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-   <img src="frontend/public/screenshots/FuelTracking" width="100%" alt="Adding, editing, and deleting fillups and filtering by vehicle and fuel type."/>
+   <img src="frontend/public/screenshots/FuelTracking.png" width="100%" alt="Adding, editing, and deleting fillups and filtering by vehicle and fuel type."/>
 </div>
 
 ### 🟩 Reports & Analytics
 <p>Visual analytics with charts and TCO breakdowns.</p>
 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-    <img src="frontend/public/screenshots/Reposrts.png" width="100%" alt="Reports displaying data on various costs, fuel efficiency, and monthly trends."/>
+    <img src="frontend/public/screenshots/Reports.png" width="100%" alt="Reports displaying data on various costs, fuel efficiency, and monthly trends."/>
 </div>
 
 ---
