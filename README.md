@@ -444,7 +444,7 @@ vehicle-expense-tracker/
 
 ### **Prerequisites**
 - Docker & Docker Compose installed
-- OR: .NET 8 SDK + Node.js 18+ + PostgreSQL
+- OR: .NET 8 SDK + Node.js 20+ + PostgreSQL
 
 ---
 
