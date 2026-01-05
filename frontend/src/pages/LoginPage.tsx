@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export function LoginPage() {
-  const navigate = useNavigate();
   const { login } = useAuth();
   
   const [formData, setFormData] = useState({
@@ -43,7 +42,7 @@ export function LoginPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -56,7 +55,13 @@ export function LoginPage() {
         email: formData.email,
         password: formData.password,
       });
-      navigate('/');
+
+      // Give a small delay to ensure localStorage write completes
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Use window.location.href instead of navigate to force a full page reload
+      // This ensures the auth state is fully updated before navigation
+      window.location.href = '/';
     } catch (error) {
       const errorMessage = error instanceof Error
         ? error.message
