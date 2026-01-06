@@ -71,13 +71,6 @@ The application is seeded with three test accounts (all use password: Test123):
 - **Fuel Efficiency Metrics** — Performance analytics
 - **Per-Vehicle Analysis** — Individual vehicle cost summaries
 
-### 📄 Document Management
-- Receipt upload with two-step process (upload + link to expense)
-- OCR stub for future text extraction
-- User-specific file storage
-- File type validation (JPEG, PNG, PDF)
-- 5MB file size limit
-
 ---
 
 ## 📸 Screenshots
@@ -533,32 +526,6 @@ vehicle-expense-tracker/
    npm run dev
    ```
    Frontend runs at http://localhost:5173
-
-## 🧪 Running Tests
-
-### **Backend xUnit Tests**
-
-12 tests covering FuelService and ReportService:
-
-```bash
-cd backend/src/VehicleExpenseAPI.Tests
-dotnet test
-```
-
-**Test Coverage:**
-- ✅ Fuel efficiency calculations (L/100km, MPG, kWh/100km)
-- ✅ Odometer validation logic
-- ✅ Linked expense creation/deletion
-- ✅ TCO calculations with fuel deduplication
-- ✅ Cost breakdown by category
-- ✅ Monthly trend aggregation
-
-**Test Results:**
-
-Total tests: 12
-Passed: 12 ✅
-Failed: 0
-Skipped: 0
 
 ## 🧪 Running Tests
 
