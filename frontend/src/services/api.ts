@@ -1,9 +1,12 @@
 import axios from 'axios';
 
-// Use relative path for Docker (proxy handles routing), or full URL for production
-const API_BASE_URL = import.meta.env.VITE_API_URL?.startsWith('http://backend')
-  ? '/api'  // Relative path for Docker - proxy will handle it
-  : import.meta.env.VITE_API_URL || '/api';  // Full URL for production or relative for local
+// In production, VITE_API_URL is baked in at build time via fly.toml
+// In local Docker, VITE_API_URL='http://backend:8080' which triggers proxy usage
+// The dev server proxy (vite.config.ts) forwards /api to backend
+const envApiUrl = import.meta.env.VITE_API_URL;
+const API_BASE_URL = envApiUrl?.startsWith('http://backend')
+  ? '/api'  // Docker dev: use relative path, proxy forwards to backend:8080
+  : envApiUrl || '/api';  // Production: use full URL from build args, or fallback to relative
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
