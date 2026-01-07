@@ -117,7 +117,7 @@ export function CostBreakdownChart({ breakdown }: CostBreakdownChartProps) {
             <div className="text-sm text-gray-400 mb-3">
               Total: <span className="text-white font-semibold">{formatCurrency(breakdown.totalCost)}</span>
             </div>
-            {tcoData.map((item, index) => (
+            {tcoData.map((item) => (
               <div
                 key={`tco-${item.category}`}
                 className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg"
@@ -189,7 +189,7 @@ export function CostBreakdownChart({ breakdown }: CostBreakdownChartProps) {
             <div className="text-sm text-gray-400 mb-3">
               Total: <span className="text-white font-semibold">{formatCurrency(operatingCostsTotal)}</span>
             </div>
-            {operatingCostsData.map((item, index) => (
+            {operatingCostsData.map((item) => (
               <div
                 key={`operating-${item.category}`}
                 className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg"
