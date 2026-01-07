@@ -103,9 +103,10 @@ export function ExpenseForm({ expense, vehicles, onSubmit, onCancel }: ExpenseFo
         notes: formData.notes.trim() || undefined,
       };
 
-      const submitData: CreateExpenseDto | UpdateExpenseDto = isEditing
-        ? baseData
-        : { ...baseData, vehicleId: parseInt(formData.vehicleId) };
+    const submitData: CreateExpenseDto | UpdateExpenseDto = {
+      ...baseData,
+      vehicleId: parseInt(formData.vehicleId)
+    };
 
       await onSubmit(submitData);
     } catch (err) {
