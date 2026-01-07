@@ -25,8 +25,14 @@ public class ExpensesController : ControllerBase
     /// </summary>
     /// <param name="vehicleId">Optional: Filter by vehicle ID</param>
     /// <param name="category">Optional: Filter by category (0=Fuel, 1=Maintenance, etc.)</param>
+    /// <param name="startDate">Optional: Filter expenses on or after this date (YYYY-MM-DD)</param>
+    /// <param name="endDate">Optional: Filter expenses on or before this date (YYYY-MM-DD)</param>
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int? vehicleId = null, [FromQuery] int? category = null)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int? vehicleId = null, 
+        [FromQuery] int? category = null,   
+        [FromQuery] DateOnly? startDate = null,
+        [FromQuery] DateOnly? endDate = null)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         
@@ -36,10 +42,10 @@ public class ExpensesController : ControllerBase
             return Unauthorized(new { error = "Invalid token" });
         }
 
-        _logger.LogInformation("Getting expenses for user: {UserId}, VehicleId: {VehicleId}, Category: {Category}", 
-            userId, vehicleId, category);
+        _logger.LogInformation("Getting expenses for user: {UserId}, VehicleId: {VehicleId}, Category: {Category}, StartDate: {StartDate}, EndDate: {EndDate}", 
+            userId, vehicleId, category, startDate, endDate);
         
-        var expenses = await _expenseService.GetAllAsync(userId, vehicleId, category);
+        var expenses = await _expenseService.GetAllAsync(userId, vehicleId, category, startDate, endDate);
         return Ok(expenses);
     }
 
