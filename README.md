@@ -88,13 +88,13 @@ The application is seeded with three test accounts (all use password: Test123):
 </div>
 
 ### 🟨 Expense Tracking
-<p>Filter and manage expenses by category and vehicle.</p>
+<p>Filter and manage expenses by category, vehcile, and/or date.</p>
 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
    <img src="frontend/public/screenshots/ExpenseTracking.png" width="100%" alt="Adding, editing, and deleting expenses and filtering by category."/>
 </div>
 
 ### 🟨 Fuel Tracking
-<p>Filter and manage expenses by category and vehicle.</p>
+<p>Filter and manage expenses by category, vehicle, and/or date.</p>
 <div style="display: flex; gap: 12px; margin-bottom: 20px;">
    <img src="frontend/public/screenshots/FuelTracking.png" width="100%" alt="Adding, editing, and deleting fillups and filtering by vehicle and fuel type."/>
 </div>
