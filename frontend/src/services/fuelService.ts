@@ -2,8 +2,21 @@ import apiClient from './api';
 import type { FuelEntry, CreateFuelEntryDto, UpdateFuelEntryDto, FuelEfficiencyDto } from '../types/Fuel';
 
 export const fuelService = {
-  async getAll(vehicleId?: number): Promise<FuelEntry[]> {
-    const url = vehicleId ? `/fuel?vehicleId=${vehicleId}` : '/fuel';
+  async getAll(
+    vehicleId?: number,
+    energyType?: number,
+    startDate?: string,
+    endDate?: string
+  ): Promise<FuelEntry[]> {
+    const params = new URLSearchParams();
+    if (vehicleId !== undefined) params.append('vehicleId', vehicleId.toString());
+    if (energyType !== undefined) params.append('energyType', energyType.toString());
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+
+    const queryString = params.toString();
+    const url = queryString ? `/fuel?${queryString}` : '/fuel';
+
     const response = await apiClient.get<FuelEntry[]>(url);
     return response.data;
   },

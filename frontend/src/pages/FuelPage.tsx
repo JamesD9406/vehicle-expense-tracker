@@ -8,6 +8,8 @@ import type { Vehicle } from '../types/Vehicle';
 import FuelForm from '../components/fuel/FuelForm';
 import DeleteFuelModal from '../components/fuel/DeleteFuelModal';
 import { Navigation } from '../components/Navigation';
+import { Pagination } from '../components/common/Pagination';
+import { DateRangeFilter } from '../components/common/DateRangeFilter';
 import { formatCurrency, formatDateOnly } from '../utils/helpers';
 import type { AxiosError } from 'axios';
 
@@ -16,10 +18,19 @@ export default function FuelPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Filter state
   const [filterVehicleId, setFilterVehicleId] = useState<number | undefined>(undefined);
-  
+  const [filterEnergyType, setFilterEnergyType] = useState<number | undefined>(undefined);
+
+  // Date filters
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
+
   // Modal state
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<FuelEntry | null>(null);
@@ -28,24 +39,30 @@ export default function FuelPage() {
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterVehicleId]);
+  }, [filterVehicleId, filterEnergyType, startDate, endDate]);
 
   const loadData = async () => {
     setLoading(true);
     setError('');
     try {
       const [entriesData, vehiclesData] = await Promise.all([
-        fuelService.getAll(filterVehicleId),
+        fuelService.getAll(
+          filterVehicleId,
+          filterEnergyType,
+          startDate || undefined,
+          endDate || undefined
+        ),
         vehicleService.getAll(),
       ]);
-      
+
       // Sort by date (newest first)
-      const sortedEntries = entriesData.sort((a, b) => 
+      const sortedEntries = entriesData.sort((a, b) =>
         new Date(b.date).getTime() - new Date(a.date).getTime()
       );
-      
+
       setFuelEntries(sortedEntries);
       setVehicles(vehiclesData);
+      setCurrentPage(1); // Reset to first page when filters change
     } catch (err) {
       const axiosError = err as AxiosError<{ message?: string }>;
       setError(axiosError.response?.data?.message || 'Failed to load fuel entries');
@@ -75,22 +92,33 @@ export default function FuelPage() {
 
   const clearFilters = () => {
     setFilterVehicleId(undefined);
+    setFilterEnergyType(undefined);
+    setStartDate('');
+    setEndDate('');
+    setCurrentPage(1);
   };
 
-  const hasActiveFilters = filterVehicleId !== undefined;
+  const hasActiveFilters = filterVehicleId !== undefined || filterEnergyType !== undefined || startDate !== '' || endDate !== '';
 
   const getEnergyTypeBadgeColor = (type: number): string => {
     switch (type) {
       case EnergyType.Gasoline:
-        return 'bg-orange-900/50 text-orange-300 border-orange-700';
+        return 'bg-red-900/50 text-red-300 border-red-700';
       case EnergyType.Diesel:
-        return 'bg-yellow-900/50 text-yellow-300 border-yellow-700';
+        return 'bg-amber-900/50 text-amber-300 border-amber-700';
       case EnergyType.Electricity:
-        return 'bg-green-900/50 text-green-300 border-green-700';
+        return 'bg-emerald-900/50 text-emerald-300 border-emerald-700';
       default:
         return 'bg-gray-900/50 text-gray-300 border-gray-700';
     }
   };
+
+  // Pagination calculations
+  const totalFuelEntries = fuelEntries.length;
+  const totalPages = Math.ceil(totalFuelEntries / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedFuelEntries = fuelEntries.slice(startIndex, endIndex);
 
   if (loading) {
     return (
@@ -181,6 +209,30 @@ export default function FuelPage() {
                     </select>
                   </div>
 
+                  <div>
+                    <label htmlFor="filterEnergyType" className="block text-sm font-medium text-gray-300 mb-2">
+                      Energy Type
+                    </label>
+                    <select
+                      id="filterEnergyType"
+                      value={filterEnergyType || ''}
+                      onChange={(e) => setFilterEnergyType(e.target.value ? parseInt(e.target.value) : undefined)}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Types</option>
+                      <option value={EnergyType.Gasoline}>Gasoline</option>
+                      <option value={EnergyType.Diesel}>Diesel</option>
+                      <option value={EnergyType.Electricity}>Electricity</option>
+                    </select>
+                  </div>
+
+                  <DateRangeFilter
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartDateChange={setStartDate}
+                    onEndDateChange={setEndDate}
+                  />
+
                   {hasActiveFilters && (
                     <div className="flex items-end">
                       <button
@@ -252,7 +304,7 @@ export default function FuelPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-700">
-                    {fuelEntries.map((entry) => (
+                    {paginatedFuelEntries.map((entry) => (
                       <tr key={entry.id} className="hover:bg-gray-700/50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                           {formatDateOnly(entry.date)}
@@ -301,6 +353,23 @@ export default function FuelPage() {
                   </tbody>
                 </table>
               </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalFuelEntries}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => {
+                  setCurrentPage(page);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onItemsPerPageChange={(newItemsPerPage) => {
+                  setItemsPerPage(newItemsPerPage);
+                  setCurrentPage(1);
+                }}
+                itemLabel="fuel entry"
+                itemLabelPlural="fuel entries"
+              />
             </div>
           )}
         </div>

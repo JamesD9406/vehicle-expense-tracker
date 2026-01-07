@@ -14,7 +14,12 @@ public class FuelService
         _context = context;
     }
 
-    public async Task<IEnumerable<FuelEntryDto>> GetAllAsync(string userId, int? vehicleId = null, EnergyType? energyType = null)
+    public async Task<IEnumerable<FuelEntryDto>> GetAllAsync(
+        string userId,
+        int? vehicleId = null,
+        EnergyType? energyType = null,
+        DateOnly? startDate = null,
+        DateOnly? endDate = null)
     {
         var query = _context.FuelEntries
             .Include(f => f.Vehicle)
@@ -28,6 +33,18 @@ public class FuelService
         if (energyType.HasValue)
         {
             query = query.Where(f => f.EnergyType == energyType.Value);
+        }
+
+        // Filter by start date if specified
+        if (startDate.HasValue)
+        {
+            query = query.Where(f => f.Date >= startDate.Value);
+        }
+
+        // Filter by end date if specified
+        if (endDate.HasValue)
+        {
+            query = query.Where(f => f.Date <= endDate.Value);
         }
 
         var fuelEntries = await query
