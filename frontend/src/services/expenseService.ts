@@ -2,10 +2,17 @@ import apiClient from './api';
 import type { Expense, CreateExpenseDto, UpdateExpenseDto } from '../types/Expense';
 
 export const expenseService = {
-  async getAll(vehicleId?: number, category?: number): Promise<Expense[]> {
+async getAll(
+    vehicleId?: number, 
+    category?: number,
+    startDate?: string,
+    endDate?: string
+  ): Promise<Expense[]> {
     const params = new URLSearchParams();
     if (vehicleId !== undefined) params.append('vehicleId', vehicleId.toString());
     if (category !== undefined) params.append('category', category.toString());
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
     
     const queryString = params.toString();
     const url = queryString ? `/expenses?${queryString}` : '/expenses';

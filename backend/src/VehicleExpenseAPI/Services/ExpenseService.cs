@@ -14,7 +14,12 @@ public class ExpenseService
         _context = context;
     }
 
-    public async Task<IEnumerable<ExpenseDto>> GetAllAsync(string userId, int? vehicleId = null, int? category = null)
+public async Task<IEnumerable<ExpenseDto>> GetAllAsync(
+        string userId, 
+        int? vehicleId = null, 
+        int? category = null,
+        DateOnly? startDate = null,
+        DateOnly? endDate = null)
     {
         var query = _context.Expenses
             .Include(e => e.Vehicle)
@@ -30,6 +35,18 @@ public class ExpenseService
         if (category.HasValue)
         {
             query = query.Where(e => (int)e.Category == category.Value);
+        }
+
+        // Filter by start date if specified
+        if (startDate.HasValue)
+        {
+            query = query.Where(e => e.Date >= startDate.Value);
+        }
+
+        // Filter by end date if specified
+        if (endDate.HasValue)
+        {
+            query = query.Where(e => e.Date <= endDate.Value);
         }
 
         var expenses = await query

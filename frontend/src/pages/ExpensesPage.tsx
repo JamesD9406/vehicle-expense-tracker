@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Plus, Edit, Trash2, Loader2, AlertCircle, Filter, X } from 'lucide-react';
+import { Wallet, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Loader2, 
+  AlertCircle, 
+  Filter, 
+  X, 
+  Calendar, 
+  ChevronLeft, 
+  ChevronRight } from 'lucide-react';
 import { Navigation } from '../components/Navigation';
 import { ExpenseForm } from '../components/expense/ExpenseForm';
 import { DeleteExpenseModal } from '../components/expense/DeleteExpenseModal';
@@ -26,6 +36,14 @@ export function ExpensesPage() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | undefined>(undefined);
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>(undefined);
 
+  // Date filters
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(15); // Now configurable
+
   const categoryOptions = [
     // { value: 0, label: 'Fuel' }, // REMOVED - Use Fuel page instead
     { value: 1, label: 'Maintenance' },
@@ -48,7 +66,7 @@ export function ExpensesPage() {
       fetchExpenses();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedVehicleId, selectedCategory]);
+  }, [selectedVehicleId, selectedCategory, startDate, endDate]);
 
   const fetchInitialData = async () => {
     try {
@@ -73,8 +91,14 @@ export function ExpensesPage() {
   const fetchExpenses = async () => {
     try {
       setError(null);
-      const data = await expenseService.getAll(selectedVehicleId, selectedCategory);
+      const data = await expenseService.getAll(
+        selectedVehicleId, 
+        selectedCategory,
+        startDate || undefined,
+        endDate || undefined
+      );
       setExpenses(data);
+      setCurrentPage(1); // Reset to first page when filters change
     } catch (err) {
       console.error('Error fetching expenses:', err);
       setError('Failed to load expenses. Please try again.');
@@ -131,13 +155,79 @@ export function ExpensesPage() {
   const clearFilters = () => {
     setSelectedVehicleId(undefined);
     setSelectedCategory(undefined);
+    setStartDate('');
+    setEndDate('');
+    setCurrentPage(1);
   };
 
-  const hasActiveFilters = selectedVehicleId !== undefined || selectedCategory !== undefined;
+  const hasActiveFilters = selectedVehicleId !== undefined || selectedCategory !== undefined || startDate !== '' || endDate !== '';
 
   const sortedExpenses = [...expenses].sort((a, b) => {
     return new Date(b.date).getTime() - new Date(a.date).getTime();
   });
+
+  // Pagination calculations
+  const totalExpenses = sortedExpenses.length;
+  const totalPages = Math.ceil(totalExpenses / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedExpenses = sortedExpenses.slice(startIndex, endIndex);
+  const displayStart = totalExpenses === 0 ? 0 : startIndex + 1;
+  const displayEnd = Math.min(endIndex, totalExpenses);
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      handlePageChange(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      handlePageChange(currentPage + 1);
+    }
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
 
   if (isLoading) {
     return (
@@ -219,7 +309,7 @@ export function ExpensesPage() {
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label htmlFor="filterVehicle" className="block text-sm font-medium text-gray-400 mb-1">
                   Vehicle
@@ -255,6 +345,32 @@ export function ExpensesPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label htmlFor="filterStartDate" className="flex items-center text-sm font-medium text-gray-400 mb-1">
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  id="filterStartDate"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label htmlFor="filterEndDate" className="flex items-center text-sm font-medium text-gray-400 mb-1">
+                  <Calendar className="h-4 w-4 mr-1" />
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  id="filterEndDate"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
             </div>
           </div>
@@ -323,7 +439,7 @@ export function ExpensesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-700">
-                    {sortedExpenses.map((expense) => (
+                    {paginatedExpenses.map((expense) => (
                       <tr key={expense.id} className="hover:bg-gray-750 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {formatDateOnly(expense.date)}
@@ -365,6 +481,76 @@ export function ExpensesPage() {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Pagination Info and Controls */}
+              {totalExpenses > 0 && (
+                <div className="bg-gray-900 px-4 py-3 border-t border-gray-700 sm:px-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    {/* Results info and items per page selector */}
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm text-gray-400">
+                        Showing <span className="font-medium text-white">{displayStart}</span> to{' '}
+                        <span className="font-medium text-white">{displayEnd}</span> of{' '}
+                        <span className="font-medium text-white">{totalExpenses}</span> expense{totalExpenses !== 1 ? 's' : ''}
+                      </div>
+                      <select 
+                        value={itemsPerPage} 
+                        onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                        className="px-2 py-1 bg-gray-700 border border-gray-600 rounded-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value={10}>10 per page</option>
+                        <option value={15}>15 per page</option>
+                        <option value={20}>20 per page</option>
+                        <option value={50}>50 per page</option>
+                      </select>
+                    </div>
+                    
+                    {totalPages > 1 && (
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={handlePreviousPage}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1 rounded-md bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          <span className="ml-1 hidden sm:inline">Previous</span>
+                        </button>
+                        
+                        <div className="flex items-center space-x-1">
+                          {getPageNumbers().map((page, index) => (
+                            page === '...' ? (
+                              <span key={`ellipsis-${index}`} className="px-3 py-1 text-gray-400">
+                                ...
+                              </span>
+                            ) : (
+                              <button
+                                key={page}
+                                onClick={() => handlePageChange(page as number)}
+                                className={`px-3 py-1 rounded-md transition-colors ${
+                                  currentPage === page
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            )
+                          ))}
+                        </div>
+                        
+                        <button
+                          onClick={handleNextPage}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-1 rounded-md bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                        >
+                          <span className="mr-1 hidden sm:inline">Next</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
