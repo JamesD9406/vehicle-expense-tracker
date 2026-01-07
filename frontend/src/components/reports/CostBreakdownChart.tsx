@@ -2,7 +2,31 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { formatCurrency } from '../../utils/helpers';
 import type { CategoryBreakdownItem, CostBreakdownDto } from '../../types/Report';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'];
+// Category-specific colors matching ExpensesPage badges
+const getCategoryColor = (category: string): string => {
+  switch (category) {
+    case 'Maintenance':
+      return '#3b82f6'; // Blue
+    case 'Insurance':
+      return '#a855f7'; // Purple
+    case 'Registration':
+      return '#6366f1'; // Indigo
+    case 'Repairs':
+      return '#ef4444'; // Red
+    case 'Parking':
+      return '#eab308'; // Yellow
+    case 'Tolls':
+      return '#f97316'; // Orange
+    case 'Fuel & Charging':
+      return '#10b981'; // Green (for fuel entries)
+    case 'Purchase Price':
+      return '#06b6d4'; // Cyan
+    case 'Other':
+      return '#6b7280'; // Gray
+    default:
+      return '#6b7280'; // Gray fallback
+  }
+};
 
 interface CostBreakdownChartProps {
   breakdown: CostBreakdownDto;
@@ -71,8 +95,8 @@ export function CostBreakdownChart({ breakdown }: CostBreakdownChartProps) {
                   }}
                   labelLine={false}
                 >
-                  {tcoData.map((_, index) => (
-                    <Cell key={`cell-tco-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {tcoData.map((item, index) => (
+                    <Cell key={`cell-tco-${index}`} fill={getCategoryColor(item.category)} />
                   ))}
                 </Pie>
                 <Tooltip
@@ -101,7 +125,7 @@ export function CostBreakdownChart({ breakdown }: CostBreakdownChartProps) {
                 <div className="flex items-center gap-3">
                   <div
                     className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    style={{ backgroundColor: getCategoryColor(item.category) }}
                   />
                   <span className="text-gray-200 font-medium">{item.category}</span>
                 </div>
@@ -143,8 +167,8 @@ export function CostBreakdownChart({ breakdown }: CostBreakdownChartProps) {
                   }}
                   labelLine={false}
                 >
-                  {operatingCostsData.map((_, index) => (
-                    <Cell key={`cell-operating-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {operatingCostsData.map((item, index) => (
+                    <Cell key={`cell-operating-${index}`} fill={getCategoryColor(item.category)} />
                   ))}
                 </Pie>
                 <Tooltip
@@ -173,7 +197,7 @@ export function CostBreakdownChart({ breakdown }: CostBreakdownChartProps) {
                 <div className="flex items-center gap-3">
                   <div
                     className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    style={{ backgroundColor: getCategoryColor(item.category) }}
                   />
                   <span className="text-gray-200 font-medium">{item.category}</span>
                 </div>

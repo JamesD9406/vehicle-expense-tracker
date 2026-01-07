@@ -26,21 +26,27 @@ public class FuelController : ControllerBase
     /// </summary>
     /// <param name="vehicleId">Optional: Filter by vehicle ID</param>
     /// <param name="energyType">Optional: Filter by energy type</param>
+    /// <param name="startDate">Optional: Filter entries on or after this date (YYYY-MM-DD)</param>
+    /// <param name="endDate">Optional: Filter entries on or before this date (YYYY-MM-DD)</param>
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int? vehicleId = null, [FromQuery] EnergyType? energyType = null)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int? vehicleId = null,
+        [FromQuery] EnergyType? energyType = null,
+        [FromQuery] DateOnly? startDate = null,
+        [FromQuery] DateOnly? endDate = null)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        
+
         if (string.IsNullOrEmpty(userId))
         {
             _logger.LogWarning("GetAll called but no user ID found in token");
             return Unauthorized(new { error = "Invalid token" });
         }
 
-        _logger.LogInformation("Getting fuel entries for user: {UserId}, VehicleId: {VehicleId}, EnergyType: {EnergyType}", 
-            userId, vehicleId, energyType);
-        
-        var fuelEntries = await _fuelService.GetAllAsync(userId, vehicleId, energyType);
+        _logger.LogInformation("Getting fuel entries for user: {UserId}, VehicleId: {VehicleId}, EnergyType: {EnergyType}, StartDate: {StartDate}, EndDate: {EndDate}",
+            userId, vehicleId, energyType, startDate, endDate);
+
+        var fuelEntries = await _fuelService.GetAllAsync(userId, vehicleId, energyType, startDate, endDate);
         return Ok(fuelEntries);
     }
 
