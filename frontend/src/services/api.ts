@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5041/api';
+// Use relative path for Docker (proxy handles routing), or full URL for production
+const API_BASE_URL = import.meta.env.VITE_API_URL?.startsWith('http://backend')
+  ? '/api'  // Relative path for Docker - proxy will handle it
+  : import.meta.env.VITE_API_URL || '/api';  // Full URL for production or relative for local
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
