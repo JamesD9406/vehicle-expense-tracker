@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -18,6 +19,8 @@ export function LoginPage() {
   }>({});
   
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
@@ -128,18 +131,20 @@ export function LoginPage() {
                 <p className="mt-1 text-sm text-red-400">{errors.email}</p>
               )}
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
-                Password
-              </label>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+              Password
+            </label>
+            <div className="relative">
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 required
-                className={`appearance-none relative block w-full px-3 py-2 border ${
+                className={`appearance-none relative block w-full px-3 py-2 pr-10 border ${
                   errors.password ? 'border-red-500' : 'border-gray-600'
                 } placeholder-gray-500 text-white bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Password"
@@ -149,10 +154,21 @@ export function LoginPage() {
                   if (errors.password) setErrors({ ...errors, password: undefined });
                 }}
               />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-400">{errors.password}</p>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
             </div>
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-400">{errors.password}</p>
+            )}
           </div>
 
           <div>

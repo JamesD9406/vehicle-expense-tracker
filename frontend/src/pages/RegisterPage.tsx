@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ export function RegisterPage() {
   }>({});
   
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
@@ -140,22 +144,35 @@ export function RegisterPage() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className={`appearance-none relative block w-full px-3 py-2 border ${
-                  errors.password ? 'border-red-500' : 'border-gray-600'
-                } placeholder-gray-500 text-white bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
-                placeholder="At least 6 characters with a number"
-                value={formData.password}
-                onChange={(e) => {
-                  setFormData({ ...formData, password: e.target.value });
-                  if (errors.password) setErrors({ ...errors, password: undefined });
-                }}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  className={`appearance-none relative block w-full px-3 py-2 pr-10 border ${
+                    errors.password ? 'border-red-500' : 'border-gray-600'
+                  } placeholder-gray-500 text-white bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                  placeholder="At least 6 characters with a number"
+                  value={formData.password}
+                  onChange={(e) => {
+                    setFormData({ ...formData, password: e.target.value });
+                    if (errors.password) setErrors({ ...errors, password: undefined });
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-400">{errors.password}</p>
               )}
@@ -172,22 +189,35 @@ export function RegisterPage() {
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
                 Confirm Password
               </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                className={`appearance-none relative block w-full px-3 py-2 border ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-600'
-                } placeholder-gray-500 text-white bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
-                placeholder="Re-enter your password"
-                value={formData.confirmPassword}
-                onChange={(e) => {
-                  setFormData({ ...formData, confirmPassword: e.target.value });
-                  if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: undefined });
-                }}
-              />
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  className={`appearance-none relative block w-full px-3 py-2 pr-10 border ${
+                    errors.confirmPassword ? 'border-red-500' : 'border-gray-600'
+                  } placeholder-gray-500 text-white bg-gray-800 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                  placeholder="Re-enter your password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => {
+                    setFormData({ ...formData, confirmPassword: e.target.value });
+                    if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: undefined });
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-400">{errors.confirmPassword}</p>
               )}
